@@ -1,0 +1,32 @@
+# Metric definitions: ONE place, used by both the SQL (standard) and pandas (alternative) engines.
+# type: proportion (mean of a 0/1 column) | mean (mean of a numeric column)
+# role: primary | secondary | guardrail.  direction: which way is good.
+# guardrail max_harm: largest acceptable absolute worsening (treatment - control) before the readout fails.
+model: fct_experiment_member
+group_by: arm_cd
+control: control
+treatment: treatment
+metrics:
+  - name: engagement_rate
+    type: proportion
+    column: engaged_flag
+    role: primary
+    direction: higher_is_better
+  - name: post_pmpm
+    type: mean
+    column: post_pmpm
+    role: secondary
+    direction: lower_is_better
+    cuped_covariate: pre_pmpm
+  - name: complaint_rate
+    type: proportion
+    column: complaint_flag
+    role: guardrail
+    direction: lower_is_better
+    max_harm: 0.005
+  - name: opt_out_rate
+    type: proportion
+    column: opt_out_flag
+    role: guardrail
+    direction: lower_is_better
+    max_harm: 0.01

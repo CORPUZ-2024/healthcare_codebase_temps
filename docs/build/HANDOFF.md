@@ -17,8 +17,8 @@ template), `IMPLEMENTATION_PLAN.txt` (scope) and `docs/CONVENTIONS.md` (rules). 
 
 ## Where things stand
 
-* **Done and green (244 tests):** P0 (repo, orchestrator, CI, docs), P1 (t00, t01, t05), P2 (t02, t03, t04), P3 (t06, t07, t08), P4: t09.
-* **Next:** P4 — t10, t11, t12; then P5–P7. Build notes for t00–t09: `BUILD_NOTES.md` (this folder).
+* **Done and green (337 tests, 16 templates):** P0–P5 — every template t00–t15.
+* **Next:** P6 glossary (31 entries), then P7 finish. Build notes for t00–t15: `BUILD_NOTES.md` (this folder).
 * The glossary is still the **mock-up** (2 of 31 entries). Its build script is `glossary/build/build_glossary.py`
   (entries list + FULL dict; each copy block is a standalone `.py` in `glossary/build/`).
 
@@ -29,7 +29,7 @@ cd C:\Users\16502\Documents\GitHub\healthcare_codebase_temps
 py -3.11 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements-dev.txt
-python orchestrator\run_all_tests.py          # expect 10 templates PASS
+python orchestrator\run_all_tests.py          # expect 16 templates PASS
 python -m pytest orchestrator                  # expect 12 passed
 ```
 If `lifelines` fails to build, upgrade tooling first: `python -m pip install -U pip setuptools wheel`.

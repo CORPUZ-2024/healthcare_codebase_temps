@@ -1,0 +1,9 @@
+id: t11
+title: Survival and time-to-event analysis
+type: F
+intents: [EXPLAIN, PREDICT]
+volume: S
+stacks: [SRV]
+settings: [PAYER, VBC, HOME, HOSP]
+workflows: [F3, C4]
+jd: [time-to-event and survival analysis, outcome studies, readmission and placement risk]

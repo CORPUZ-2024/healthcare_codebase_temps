@@ -36,12 +36,12 @@ python run.py --selftest               # checks without pytest
 | t07 | [vbc_contract_modeling](templates/t07_vbc_contract_modeling) | VBC | deterministic reconciliation vs. Monte Carlo | ✅ |
 | t08 | [claims_completion_forecast](templates/t08_claims_completion_forecast) | Actuarial | chain-ladder + SARIMAX vs. Bornhuetter-Ferguson + ETS | ✅ |
 | t09 | [study_design_power](templates/t09_study_design_power) | Evidence | analytic vs. simulation power | ✅ |
-| t10 | causal_impact_evaluation | Evidence | DiD / PSM vs. AIPW / ITS | ⏳ |
-| t11 | survival_time_to_event | Evidence | lifelines KM/Cox vs. statsmodels PHReg | ⏳ |
-| t12 | patient_reported_outcomes | Evidence | MMRM vs. ANCOVA / GEE | ⏳ |
-| t13 | provider_benchmark_profiling | Performance | O/E + EB shrinkage vs. mixed model | ⏳ |
-| t14 | metric_layer_dbt_style | Cross-functional | SQL models on DuckDB vs. pandas; t-test vs. CUPED | ⏳ |
-| t15 | ops_lifecycle_prior_auth | Operations | KM funnel vs. cohort tables | ⏳ |
+| t10 | [causal_impact_evaluation](templates/t10_causal_impact_evaluation) | Evidence | DiD + event study / PSM vs. AIPW / ITS (GLSAR) | ✅ |
+| t11 | [survival_time_to_event](templates/t11_survival_time_to_event) | Evidence | lifelines KM/Cox vs. statsmodels PHReg / discrete-time hazard | ✅ |
+| t12 | [patient_reported_outcomes](templates/t12_patient_reported_outcomes) | Evidence | mixed model (MMRM-style) vs. ANCOVA / GEE | ✅ |
+| t13 | [provider_benchmark_profiling](templates/t13_provider_benchmark_profiling) | Performance | O/E + EB shrinkage vs. mixed model | ✅ |
+| t14 | [metric_layer_dbt_style](templates/t14_metric_layer_dbt_style) | Cross-functional | SQL models on DuckDB vs. pandas; t-test vs. CUPED | ✅ |
+| t15 | [ops_lifecycle_prior_auth](templates/t15_ops_lifecycle_prior_auth) | Operations | KM time-to-start vs. cohort tables; PA metrics + Pareto | ✅ |
 
 Niche workflows that are snippets rather than templates: [`glossary/niche_workflows_glossary.html`](glossary/niche_workflows_glossary.html) (mock-up; 2 of 31 entries populated).
 

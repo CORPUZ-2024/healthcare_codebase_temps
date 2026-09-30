@@ -1,0 +1,9 @@
+id: t14
+title: Metric layer (dbt-style) and experiment readout
+type: G
+intents: [DESIGN, MEASURE]
+volume: S
+stacks: [INF, RUL]
+settings: [ALL]
+workflows: [G2]
+jd: [metric definitions and semantic layer, data quality tests, A/B test readouts]

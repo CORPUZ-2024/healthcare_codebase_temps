@@ -1,0 +1,28 @@
+# dbt-style schema tests, run by dbt_lite.run_tests. Test names follow dbt's generic tests.
+models:
+  - name: stg_members
+    columns:
+      - name: member_id
+        tests: [not_null, unique]
+      - name: lob_cd
+        tests:
+          - accepted_values: {values: [MCD, DUAL, MCR]}
+  - name: stg_assignments
+    columns:
+      - name: member_id
+        tests:
+          - not_null
+          - unique
+          - relationships: {to: stg_members, field: member_id}
+      - name: arm_cd
+        tests:
+          - accepted_values: {values: [control, treatment]}
+  - name: fct_experiment_member
+    columns:
+      - name: member_id
+        tests: [not_null, unique]
+      - name: engaged_flag
+        tests:
+          - accepted_values: {values: [0, 1]}
+      - name: post_pmpm
+        tests: [not_null]

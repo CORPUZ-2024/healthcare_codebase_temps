@@ -1,0 +1,9 @@
+id: t13
+title: Provider benchmarking and profiling
+type: G
+intents: [MEASURE, MONITOR]
+volume: S
+stacks: [INF, AGG]
+settings: [PAYER, VBC, HOME, HOSP]
+workflows: [G1]
+jd: [provider performance benchmarking, risk-adjusted comparisons, network management]

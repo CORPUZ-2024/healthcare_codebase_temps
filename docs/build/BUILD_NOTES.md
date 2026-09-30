@@ -1,17 +1,17 @@
-# BUILD NOTES — t00 to t09 (one complete list)
+# BUILD NOTES — t00 to t15 (one complete list)
 
 Everything learned while building the templates, in one place. It covers decisions, the bugs that
 building and testing exposed and how they were fixed, the headline results that each template's
 tests lock in, known limitations, and open follow-ups.
 Companion files: [`BUILD_STATUS.md`](BUILD_STATUS.md) (phase table), [`HANDOFF.md`](HANDOFF.md)
-(how to continue; specs for t10–t15), [`../CONVENTIONS.md`](../CONVENTIONS.md) (rules).
+(how to continue; P6–P7), [`../CONVENTIONS.md`](../CONVENTIONS.md) (rules).
 
-**Status at time of writing (2026-09-29):** 10 templates, **244 tests green** under the orchestrator
-(plus 12 orchestrator self-tests), on Windows / Python 3.11.9 in `.venv`.
+**Status at time of writing (2026-09-29):** all 16 templates, **337 tests green** under the orchestrator
+(82 `run.py --selftest` checks, plus 12 orchestrator self-tests), on Windows / Python 3.11.9 in `.venv`.
 
 **Provenance.** t00, t01, t02, t03 and t05 were built in an earlier cloud session. Their notes below
 come from their READMEs, tests and git history (`6c6cdb8` P0, `7c4ad40` P1, `4bf7fb1`, `9d371ad` P2
-partial). The build-time bug log for those templates did not survive the handoff. t04 and t06–t09 were
+partial). The build-time bug log for those templates did not survive the handoff. t04 and t06–t15 were
 built in the local session; their notes include the defects found during the build.
 
 ---
@@ -52,8 +52,11 @@ built in the local session; their notes include the defects found during the bui
 | R5 | Git on Windows flips `run_all_tests.sh` to mode 644 in the working tree | Left uncommitted on purpose. Committing it would drop the executable bit that CI on Linux needs. |
 | R6 | GitHub remote was empty (`origin/main: gone`) at the first local push | The first push created `main` with the full history. Nothing was overwritten. |
 | R7 | Loose build docs at the repo root | `HANDOFF.md` and `BUILD_STATUS.md` moved to `docs/build/` (with this file). Links updated in `README.md` and inside both files. |
+| R8 | scikit-learn 1.8 deprecates `LogisticRegression(penalty=None)` (FutureWarning in t10) | Use `C=1e12` (effectively unpenalized, works on all versions). |
+| R9 | patsy formulas read names from the caller's namespace: a local variable named `C` broke `C(...)` in a probe script | Never name variables `C`, `I` or `Q` in code that builds statsmodels formulas. |
+| R10 | Long bash heredocs with quotes failed to parse three times in the build tool (t04, t11, these notes): nothing was written | Write multi-line files with an editor / file tool (or a script file), not heredocs. |
 
-### A4. Lessons that repeated across templates (apply them to t10–t15)
+### A4. Lessons that repeated across templates
 * **Put the truth in the generator.** Every analytical template since t06 generates a known effect,
   ultimate or rate, and tests whether the STANDARD method recovers it. This caught three real
   defects (t06 confounding, t07 truncation basis, t04 interval claim) that plain unit tests would have missed.
@@ -63,6 +66,18 @@ built in the local session; their notes include the defects found during the bui
   completed PMPM (t08), admin vs. hybrid (t04), matched on cost vs. on the trigger (t06).
 * **Selection → regression to the mean** shows up in t06 (naive pre/post), t07 (vendor target from the
   participants' own baseline) and t09 (why cost endpoints need huge n). Each template has a check for it.
+* **Textbook defaults can fail under test.** Newey-West SEs on a 60-month series (t10: ~75% coverage),
+  a one-coefficient-per-month event study with 40 clusters (t10: 85% false alarms), unadjusted
+  Schoenfeld tests over 5 covariates (t11), and a normal-theory power formula for skewed cost (t09).
+  Each was replaced or qualified *because a simulation showed it*, and the simulation is kept as a test.
+* **Name the estimand.** ATT vs. ATE vs. ATT-among-matched (t10), "median among started" vs. "median over
+  all referrals" (t15), between-arm vs. within-arm change (t12). Several apparent bugs were two correct
+  answers to different questions.
+* **Report misses honestly.** When the demo draw lands outside the usual behaviour (t10's missed pre-trend,
+  t10's ITS slope, t11's program HR), the demo says so and the README cites the across-seed evidence. Seeds
+  are never re-picked to make a demo look better.
+* **Censoring and immaturity** recur: KM instead of "share started so far" (t15), time-varying exposure
+  instead of "ever vs. never" (t11), completion factors instead of paid PMPM (t08), mature cohorts only (t15).
 
 ---
 
@@ -233,27 +248,116 @@ built in the local session; their notes include the defects found during the bui
 
 ---
 
-## C. Check-ID registry (t00–t09)
+### t10 — causal_impact_evaluation (P4) · 22 tests
+* **Purpose:** DiD with an event study (panel), PSM (cross-section), IPW / AIPW, and ITS for a policy with no control.
+* **Standard vs. alternative:** TWFE DiD + binned event study vs. ITS; PSM (scikit-learn logit, caliper 0.2 SD) vs. IPW
+  (ATE/ATT) and doubly robust AIPW; ITS standard errors GLSAR (default) vs. Newey-West / OLS.
+* **Results (seed 10):** DiD −1.89 (CI −2.19 to −1.59; truth −2.0). Naive treated − untreated **+4.87 vs. true ATE −3.0 (wrong sign)**.
+  PSM −3.51 vs. matched truth −3.71 (87% of participants matched). AIPW −3.01 (CI −3.54 to −2.48). IPW-ATT unstable (−5.30).
+* **Bugs / corrections during the build:**
+  1. **Event study over-rejected parallel trends** (85% false alarms): 23 lead coefficients with 40 clusters. It now bins
+     endpoints at ±6 months, giving 5% false alarms and 94% power vs. a 0.08/month drift (100-draw simulation, kept as tests).
+  2. **Newey-West ITS intervals covered ~73–77%** on 60 AR(1) months (300-draw simulation), no better than OLS; GLSAR ~90%,
+     SARIMAX over-covers and often fails to converge. Default switched to GLSAR, HAC reported alongside, test kept.
+  3. Selection was so strong that 23% of participants were unmatchable and IPW-ATT swung ±2. The referral model was softened
+     (87% matched); PSM is tested against the truth *among matched* participants.
+  4. The demo's drift scenario and ITS slope miss on seed 10. The demo prints that, with the simulation rates.
+  5. scikit-learn deprecation (R8).
+* **Checks:** CAU-001 balance, CAU-002 overlap, CAU-003 pre-trends, CAU-004 extreme weights, CAU-005 few clusters,
+  CAU-006 ITS autocorrelation with HAC/OLS, CAU-007 too few ITS points.
+* **Limitations:** single adoption date (no Callaway-Sant'Anna / Sun-Abraham); PSM SEs ignore PS estimation; no E-value sensitivity.
+
+### t11 — survival_time_to_event (P4) · 14 tests
+* **Purpose:** KM, log-rank, Cox PH + Schoenfeld test, PHReg, discrete-time hazard, RMST, immortal-time bias and its fix.
+* **Standard vs. alternative:** lifelines Cox vs. statsmodels PHReg (HRs agree to < 1e-7); discrete-time hazard for a non-PH covariate.
+* **Results (seed 11):** program HR 0.67 (truth 0.75; 1.7-SE draw; the 20-cohort mean is 0.748). Discrete-time model recovers acuity
+  2.40 → 1.18 (truth 2.5 → 1.2). RMST +10.4 readmission-free days. **Immortal time: useless program HR 0.75 "ever vs. never",
+  1.02 with time-varying exposure.**
+* **Bugs / corrections during the build:**
+  1. The Schoenfeld test flagged frailty (truly PH) at p = 0.024. The check is now Bonferroni-adjusted (α/k); only acuity is flagged.
+  2. The single-seed HR miss was investigated (30 cohorts: unbiased, 87% coverage), not "fixed" by re-seeding.
+  3. A heredoc failure (R10) and a pandas `groupby.apply` deprecation in a test were fixed.
+* **Checks:** SRV-001 PH (Bonferroni), SRV-002 heavy censoring, SRV-003 events per variable, SRV-004 competing events, SRV-005 immortal time.
+* **Limitations:** competing risks → glossary G16; informative censoring not modelled.
+
+### t12 — patient_reported_outcomes (P4) · 15 tests
+* **Purpose:** YAML instrument scoring (reverse items, prorating ≤ 1 missing, bands, MCID), reliability, responders,
+  change over time with MAR dropout. PHQ-9 (public domain) plus a FAKE caregiver burden scale (the Zarit is licensed).
+* **Standard vs. alternative:** MMRM-style mixed model vs. completers ANCOVA and GEE; observed-only vs. missing-as-non-responder.
+* **Results (seed 12):** truth −4.11; mixed −4.46, ANCOVA −4.30, GEE −4.46 (all cover). Cronbach's alpha **0.86 flipped vs.
+  0.43 unflipped**. Program-arm improvement: completers −5.90, mixed −5.68, truth −5.54. PHQ-9 −1.35: significant but below the MCID.
+* **Bugs / corrections during the build:**
+  1. **Dropout on the burden *level* barely biased change scores** (dropouts started higher and regressed to the mean).
+     It now depends on *worsening since baseline* (still MAR). A test guards that dropouts really were getting worse.
+  2. Even then, the **between-arm** bias of completers ANCOVA stays small (selection cancels across arms). The template
+     tests the **within-arm** bias instead (completers −0.5 points over 10 trials), the real single-arm-program trap.
+  3. A probe script shadowed patsy's `C()` (R9).
+* **Checks:** PRO-001 unscorable, PRO-002 differential dropout, PRO-003 floor/ceiling, PRO-004 license, PRO-005 reliability.
+* **Limitations:** compound symmetry, not unstructured covariance; no tipping-point analysis; MEPS columns to verify.
+
+### t13 — provider_benchmark_profiling (P5) · 13 tests
+* **Purpose:** risk model → O/E (exact CI) → funnel (95% / 99.8%) → EB (Poisson-gamma) shrinkage; mixed logistic alternative;
+  beta-binomial EB for unadjusted rates; HRRP benchmark with a vintage check.
+* **Results (seed 13):** RMSE (log) vs. true provider ratio: crude 0.59, O/E 0.50, **EB 0.126, mixed 0.126**. Crude vs.
+  adjusted rank correlation 0.67. 5 providers outside 99.8% (3 better, 2 worse; all truly different).
+* **Bugs / corrections during the build:**
+  1. The EB sampling-variance term simplified wrongly; it is now the E-weighted mean of 1/E (= n/ΣE).
+  2. Random-effect label parsing was fragile; it now uses a regex on `[...]`. VB non-convergence warnings are contained and documented.
+  3. The vintage check didn't fire at exactly 365 days; the threshold is now 180 days.
+  4. The HRRP loader test used too few FAKE hospitals to include a suppressed one; it uses the default 2,500.
+  5. **The README first said "none reliably worse"**; the actual flags showed 2 worse. Corrected from the output.
+* **Checks:** BEN-001 small volume, BEN-002 overdispersion, BEN-003 risk model, BEN-004 crude vs. adjusted ranks, ANL-013 vintage.
+* **Limitations:** risk adjustment only as good as its covariates (c = 0.68); VB approximate; attribution rules (G09) upstream.
+
+### t14 — metric_layer_dbt_style (P5) · 18 tests
+* **Purpose:** `dbt_lite.py` (refs/sources, topological build, layering rules, four generic schema tests) on DuckDB; metrics
+  defined once in `metrics.yaml`; A/B readout with non-inferiority guardrails, SRM, CUPED.
+* **Standard vs. alternative:** SQL generated from YAML vs. pandas from the same YAML (parity check); z / Welch vs. CUPED.
+* **Results (seed 14):** 11/11 schema tests pass; engagement +2.3 pp (CI +1.1 to +3.5; truth +3). CUPED cuts post-PMPM
+  variance 67%. Opt-out guardrail p = 0.02 yet PASS (upper bound inside the margin). Injected defects each caught by a named test.
+* **Bugs / corrections during the build:** a 3% silent loss gave SRM p = 0.04 (not < 0.001), so the demo uses 5% (p = 2e-4).
+  A sloppy CUPED test was rewritten. README volume corrected (~45K outreach rows, not ~50K).
+* **Checks:** MET-001 schema tests, MET-002 SRM, MET-003 guardrails, MET-004 engine parity.
+* **Limitations:** no incremental models, macros, snapshots or docs; single pre-planned look (no sequential testing).
+
+### t15 — ops_lifecycle_prior_auth (P5) · 11 tests
+* **Purpose:** referral → assessment → PA → start of care → 90-day retention funnel; PA metrics vs. CMS-0057-F timeframes;
+  KM time to start (own implementation); monthly cohorts; denial Pareto.
+* **Results (seed 15):** P(start by 30 days) KM 62.8% = truth 62.8%. **Most recent month: naive "started" 34% vs. KM 63% vs.
+  truth 63%.** PA medians 41 h / 99 h; 16% / 18% miss targets; ~half of appealed denials overturned; top 2 reasons = 59%.
+* **Bugs / corrections during the build:**
+  1. **The timestamp-order check compared only neighbouring stages** and missed a start-of-care date before referral when
+     middle stages were blank (caught by a test). It now compares every stage pair.
+  2. "KM median 19 vs. naive 14" first read as censoring bias. It is two estimands (all referrals vs. starters), and the
+     demo now labels them. Censoring bias is shown on the most recent cohort instead.
+  3. The CMS-0057-F scope was overstated (QHP issuers listed under the decision timeframes). It is reworded with "verify
+     for your line of business"; an unverified cms.gov URL was replaced with a search pointer.
+* **Checks:** OPS-001 turnaround, OPS-002 immature cohorts, OPS-003 stage order (all pairs), OPS-004 overturns, OPS-005 open cases.
+* **Limitations:** 168 h used for "7 calendar days"; payers post CMS-0057-F metrics individually (no central file).
+
+---
+
+## C. Check-ID registry (t00–t15)
 
 | Family | IDs → template |
 |---|---|
 | Schema / cleaning | SCH-004, CLN-014, CLN-023, CLN-042, CLN-052, CLN-053, CLN-061 → t00 |
 | Validation | VAL-005, VAL-011, VAL-012, VAL-014 → t00 · VAL-015, VAL-031 → t00, t01 · VAL-041 → t05 · VAL-042 → t01, t05 (same family, small denominators) |
-| Analysis | ANL-003/005/006 → t03 · ANL-008 → t02 · ANL-009 → t05 · ANL-013 → t04 · ANL-015 → t07 · ANL-020 → t01 |
+| Analysis | ANL-003/005/006 → t03 · ANL-008 → t02 · ANL-009 → t05 · ANL-013 → t04, t13 · ANL-015 → t07 · ANL-020 → t01 |
 | Data quality | DQ-010 → t03 |
-| Template-specific | RA-010/020/030 (t02) · QM-001/002/010/020/030 (t04) · ROI-001…005 (t06) · VBC-001…004 (t07) · IBNR-001…004, FC-001/002 (t08) · PWR-001…006 (t09) |
+| Template-specific | RA-010/020/030 (t02) · QM-001/002/010/020/030 (t04) · ROI-001…005 (t06) · VBC-001…004 (t07) · IBNR-001…004, FC-001/002 (t08) · PWR-001…006 (t09) · CAU-001…007 (t10) · SRV-001…005 (t11) · PRO-001…005 (t12) · BEN-001…004 (t13) · MET-001…004 (t14) · OPS-001…005 (t15) |
 
 ## D. Open follow-ups
 
-1. **Verify public-file headers** against current downloads: Medicaid Core Set rates (t04), MSSP ACO PUF
-   (t07), the MEPS FYC file number for the year (t06), SynPUF paid/processed date availability (t08).
-   Loaders match headers leniently, but the column tables in each `data/README.md` are marked "verify".
+1. **Verify public-file headers** against current downloads: Medicaid Core Set rates (t04), MSSP ACO PUF (t07), the MEPS FYC
+   file number and PRO columns (t06, t12), SynPUF paid/processed and inpatient date columns (t08, t11), HRRP (t13), and what
+   payers have actually posted under CMS-0057-F (t15). Loaders match headers leniently; each `data/README.md` marks them "verify".
 2. t04: model the hybrid oversample and chart-found exclusions if hybrid rates are ever reported.
-3. t06: re-match inside the bootstrap (propensity-model uncertainty); a longer post window once data allow.
+3. t06: re-match inside the bootstrap; a longer post window once data allow.
 4. t08: large-claim handling and a non-1.0 tail factor; don't quote ETS intervals without a backtest.
-5. **Uncommitted:** t06, t07, t08, t09, these notes and the `docs/build/` move are not committed yet
-   (last commit `5e62a51`). `run_all_tests.sh` mode change: see R5.
-6. `project_specs/` (outside the repo) holds byte-identical copies of `IMPLEMENTATION_PLAN.txt` and
+5. t10: staggered-adoption DiD (Callaway-Sant'Anna / Sun-Abraham) and an E-value sensitivity analysis.
+6. t12: unstructured-covariance MMRM (R `mmrm` / SAS) and a tipping-point analysis for real studies.
+7. **Uncommitted:** t10–t15 and the doc updates since commit `adbfa56`. `run_all_tests.sh` mode change: see R5.
+8. `project_specs/` (outside the repo) holds byte-identical copies of `IMPLEMENTATION_PLAN.txt` and
    `glossary/niche_workflows_glossary.html`. Keep them as the original drafts, or delete them. That's your call.
-7. Next build: t10 causal (DiD event study, PSM, AIPW, ITS), t11 survival, t12 PROs; then P5, P6 glossary, P7.
-   Specs are in `HANDOFF.md`.
+9. Next build: **P6 glossary** (31 entries; 2 populated) and **P7** (final plan, `WORKFLOW_CATALOG.md`, `v1.0` tag). See `HANDOFF.md`.

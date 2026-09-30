@@ -1,0 +1,9 @@
+id: t15
+title: Operations lifecycle and prior authorization
+type: G
+intents: [MONITOR]
+volume: S
+stacks: [AGG, SRV]
+settings: [PAYER, HOME, HOSP]
+workflows: [G3]
+jd: [operational analytics, prior authorization turnaround, referral-to-start-of-care funnel]

@@ -1,0 +1,20 @@
+# FAKE 12-item caregiver burden scale, invented for teaching. It stands in for licensed instruments
+# such as the Zarit Burden Interview, which must NOT be reproduced without a license (Mapi Research Trust).
+# Structure (items 0-4, some reverse-worded, prorating rule, bands, MCID) mimics real scales; the numbers
+# (bands, MCID) are invented.
+instrument_id: FAKE_CAREGIVER_BURDEN
+title: FAKE caregiver burden scale (12 items)
+license: fake_teaching
+fake: true
+items: [cb01, cb02, cb03, cb04, cb05, cb06, cb07, cb08, cb09, cb10, cb11, cb12]
+item_min: 0            # never
+item_max: 4            # nearly always
+reverse_items: [cb04, cb08, cb11]   # positively worded ("I feel I cope well") -> reversed before summing
+max_missing_items: 1
+higher_is_worse: true
+bands:
+  - {min: 0, label: little or none}
+  - {min: 13, label: mild to moderate}
+  - {min: 25, label: moderate to severe}
+  - {min: 37, label: severe}
+mcid: 4

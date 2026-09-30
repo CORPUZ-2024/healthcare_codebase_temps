@@ -1,0 +1,9 @@
+id: t12
+title: Patient- and caregiver-reported outcomes
+type: F
+intents: [MEASURE, EXPLAIN]
+volume: XS
+stacks: [LON, INF]
+settings: [VBC, HOME, HOSP]
+workflows: [F4]
+jd: [patient-reported outcomes, caregiver outcomes, longitudinal mixed models]

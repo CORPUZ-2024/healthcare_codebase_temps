@@ -1,0 +1,9 @@
+id: t10
+title: Causal impact evaluation
+type: F
+intents: [EXPLAIN]
+volume: S
+stacks: [CAU, GLM]
+settings: [PAYER, VBC, HOME, HOSP, GOV]
+workflows: [F2]
+jd: [causal inference for program evaluation, quasi-experimental methods, difference-in-differences]
