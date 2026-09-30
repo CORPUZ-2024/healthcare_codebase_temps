@@ -29,7 +29,7 @@ python run.py --selftest               # checks without pytest
 | t01 | [utilization_profiling](templates/t01_utilization_profiling) | Population health | exact Poisson vs. member-bootstrap CI; readmits per index vs. per 1,000 | ✅ |
 | t02 | [hcc_risk_adjustment](templates/t02_hcc_risk_adjustment) | Risk adjustment | published (FAKE) weights vs. re-estimated weights | ✅ |
 | t03 | [predictive_risk_stratification](templates/t03_predictive_risk_stratification) | Risk | logistic vs. gradient boosting; capacity tiers vs. k-means | ✅ |
-| t04 | quality_measures_care_gaps | Quality | Wilson vs. Jeffreys; admin vs. hybrid | ⏳ |
+| t04 | [quality_measures_care_gaps](templates/t04_quality_measures_care_gaps) | Quality | Wilson vs. Jeffreys; admin vs. hybrid | ✅ |
 | t05 | [tcoc_pmpm_mlr](templates/t05_tcoc_pmpm_mlr) | Health economics | ratio-of-sums vs. mean-of-members PMPM; regulatory vs. simple MLR | ✅ |
 | t06 | roi_cost_offset | Health economics | matched DiD vs. two-part / bootstrap | ⏳ |
 | t07 | vbc_contract_modeling | VBC | deterministic reconciliation vs. Monte Carlo | ⏳ |

@@ -1,0 +1,9 @@
+id: t04
+title: Quality measures and care gaps
+type: C
+intents: [MEASURE]
+volume: M
+stacks: [RUL, INF]
+settings: [PAYER, VBC, GOV]
+workflows: [C1, C2]
+jd: [HEDIS and Medicaid Core Set measures, care gap closure, quality reporting]

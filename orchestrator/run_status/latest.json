@@ -1,20 +1,20 @@
 {
   "meta": {
-    "run_id": "2026-09-29T19-48-36",
-    "started": "2026-09-29 19:48:36",
+    "run_id": "2026-09-29T20-02-36",
+    "started": "2026-09-29 20:02:36",
     "mode": "pytest",
-    "python": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/../venv/bin/python",
-    "platform": "Linux 6.18.44-fc-v50 / Python 3.11.15"
+    "python": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\.venv\\Scripts\\python.exe",
+    "platform": "Windows 10 / Python 3.11.9"
   },
   "totals": {
-    "templates": 5,
-    "passed_templates": 5,
-    "tests_passed": 94,
+    "templates": 6,
+    "passed_templates": 6,
+    "tests_passed": 139,
     "tests_failed": 0,
     "tests_errors": 0,
     "tests_skipped": 0,
     "tests_xfailed": 0,
-    "seconds": 16.55,
+    "seconds": 25.63,
     "overall": "PASS"
   },
   "results": [
@@ -28,9 +28,9 @@
       "errors": 0,
       "skipped": 0,
       "xfailed": 0,
-      "seconds": 2.92,
+      "seconds": 1.94,
       "exit_code": 0,
-      "log_file": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/orchestrator/run_status/history/2026-09-29T19-48-36/logs/t00_claims_foundation.log",
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t00_claims_foundation.log",
       "message": ""
     },
     {
@@ -43,9 +43,9 @@
       "errors": 0,
       "skipped": 0,
       "xfailed": 0,
-      "seconds": 5.69,
+      "seconds": 6.56,
       "exit_code": 0,
-      "log_file": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/orchestrator/run_status/history/2026-09-29T19-48-36/logs/t01_utilization_profiling.log",
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t01_utilization_profiling.log",
       "message": ""
     },
     {
@@ -58,9 +58,9 @@
       "errors": 0,
       "skipped": 0,
       "xfailed": 0,
-      "seconds": 2.15,
+      "seconds": 1.44,
       "exit_code": 0,
-      "log_file": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/orchestrator/run_status/history/2026-09-29T19-48-36/logs/t02_hcc_risk_adjustment.log",
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t02_hcc_risk_adjustment.log",
       "message": ""
     },
     {
@@ -73,9 +73,24 @@
       "errors": 0,
       "skipped": 0,
       "xfailed": 0,
-      "seconds": 3.37,
+      "seconds": 4.55,
       "exit_code": 0,
-      "log_file": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/orchestrator/run_status/history/2026-09-29T19-48-36/logs/t03_predictive_risk_stratification.log",
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t03_predictive_risk_stratification.log",
+      "message": ""
+    },
+    {
+      "tid": "t04",
+      "name": "t04_quality_measures_care_gaps",
+      "mode": "pytest",
+      "status": "PASS",
+      "passed": 45,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "seconds": 9.51,
+      "exit_code": 0,
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t04_quality_measures_care_gaps.log",
       "message": ""
     },
     {
@@ -88,9 +103,9 @@
       "errors": 0,
       "skipped": 0,
       "xfailed": 0,
-      "seconds": 2.42,
+      "seconds": 1.63,
       "exit_code": 0,
-      "log_file": "/tmp/claude-0/-home-claude/b6106a50-22fa-5bcb-9fdf-a3eebaba1b37/scratchpad/healthcare_codebase_temps/orchestrator/run_status/history/2026-09-29T19-48-36/logs/t05_tcoc_pmpm_mlr.log",
+      "log_file": "C:\\Users\\16502\\Documents\\GitHub\\healthcare_codebase_temps\\healthcare_codebase_temps\\orchestrator\\run_status\\history\\2026-09-29T20-02-36\\logs\\t05_tcoc_pmpm_mlr.log",
       "message": ""
     }
   ]

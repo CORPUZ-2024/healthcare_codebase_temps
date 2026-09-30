@@ -1,0 +1,25 @@
+# FAKE teaching spec shaped like HEDIS BCS-E / Medicaid Core Set BCS-AD. NOT the NCQA specification.
+# Offsets are in months relative to Jan 1 of the measurement year (MY). -12 = Jan 1 of MY-1.
+measure_id: FAKE_BCS
+title: Breast cancer screening (FAKE spec, HEDIS-shaped)
+fake: true
+real_spec: NCQA HEDIS BCS-E; Medicaid Adult Core Set BCS-AD technical specifications
+population:
+  age_min: 52            # age on the anchor date (Dec 31 of MY); screening is for 50-74
+  age_max: 74
+  sex: F
+continuous_enrollment:
+  start_offset_months: -12   # MY-1 and MY; each year may have one gap of <= 45 days
+  allowable_gaps: 1
+  max_gap_days: 45
+  anchor_enrolled: true      # must be enrolled on Dec 31 of MY
+denominator_event: null      # everyone in the age/sex/enrollment population is eligible
+exclusions:
+  - {value_set: HOSPICE, start_offset_months: 0}
+  - {value_set: BILATERAL_MASTECTOMY, start_offset_months: -600}   # any time in history
+numerator:
+  value_sets: [MAMMOGRAPHY]
+  start_offset_months: -15   # Oct 1 two years before MY through Dec 31 MY (27 months)
+  admin_sources: [CLAIM]
+  hybrid_sources: []         # BCS is administrative only
+core_set_benchmark: BCS-AD

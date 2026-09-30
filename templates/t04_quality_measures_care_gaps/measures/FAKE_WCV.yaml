@@ -1,0 +1,23 @@
+# FAKE teaching spec shaped like HEDIS WCV / Medicaid Child Core Set WCV-CH. NOT the NCQA specification.
+measure_id: FAKE_WCV
+title: Child and adolescent well-care visit (FAKE spec, HEDIS-shaped)
+fake: true
+real_spec: NCQA HEDIS WCV; Medicaid Child Core Set WCV-CH
+population:
+  age_min: 3
+  age_max: 21
+  sex: null
+continuous_enrollment:
+  start_offset_months: 0
+  allowable_gaps: 1
+  max_gap_days: 45
+  anchor_enrolled: true
+denominator_event: null
+exclusions:
+  - {value_set: HOSPICE, start_offset_months: 0}
+numerator:
+  value_sets: [WELL_CARE]
+  start_offset_months: 0
+  admin_sources: [CLAIM]
+  hybrid_sources: []
+core_set_benchmark: WCV-CH

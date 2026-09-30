@@ -1,0 +1,22 @@
+value_set_name,code_system,code_cd,description
+MAMMOGRAPHY,CPT,77067,Screening mammography bilateral
+MAMMOGRAPHY,CPT,77066,Diagnostic mammography bilateral
+MAMMOGRAPHY,HCPCS,G0202,Screening mammography (legacy HCPCS)
+BILATERAL_MASTECTOMY,ICD10PCS,0HTV0ZZ,Resection of bilateral breast
+BILATERAL_MASTECTOMY,ICD10CM,Z9013,Acquired absence of bilateral breasts
+DIABETES,ICD10CM,E119,Type 2 diabetes without complications
+DIABETES,ICD10CM,E1165,Type 2 diabetes with hyperglycemia
+DIABETES,ICD10CM,E1122,Type 2 diabetes with diabetic CKD
+DIABETES,ICD10CM,E109,Type 1 diabetes without complications
+HBA1C_TEST,CPT,83036,Hemoglobin A1c
+HBA1C_TEST,CPT2,3044F,Most recent HbA1c < 7.0%
+HBA1C_TEST,CPT2,3046F,Most recent HbA1c > 9.0%
+HBA1C_TEST,LOINC,4548-4,Hemoglobin A1c/Hemoglobin.total in Blood
+WELL_CARE,CPT,99383,Preventive visit new 5-11
+WELL_CARE,CPT,99384,Preventive visit new 12-17
+WELL_CARE,CPT,99393,Preventive visit established 5-11
+WELL_CARE,CPT,99394,Preventive visit established 12-17
+WELL_CARE,CPT,99395,Preventive visit established 18-39
+WELL_CARE,ICD10CM,Z00129,Routine child health exam without abnormal findings
+HOSPICE,HCPCS,Q5001,Hospice care in patient home
+HOSPICE,HCPCS,G9473,Services performed by chaplain in hospice setting

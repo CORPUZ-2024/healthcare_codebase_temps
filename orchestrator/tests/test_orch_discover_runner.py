@@ -87,10 +87,10 @@ def test_report_files(fake_root, tmp_path):
     meta = run_meta("pytest", None)
     status = tmp_path / "run_status"
     write_all(results, status, status / "history" / meta["run_id"], meta)
-    data = json.loads((status / "latest.json").read_text())
+    data = json.loads((status / "latest.json").read_text(encoding="utf-8"))
     assert data["totals"]["overall"] == "FAIL"
-    assert (status / "LATEST.md").read_text().count("| t0") == 3
-    assert (status / "run_log.csv").read_text().count("\n") == 4          # header + 3 rows
+    assert (status / "LATEST.md").read_text(encoding="utf-8").count("| t0") == 3
+    assert (status / "run_log.csv").read_text(encoding="utf-8").count("\n") == 4          # header + 3 rows
     assert totals(results)["passed_templates"] == 2
 
 

@@ -1,0 +1,28 @@
+# FAKE teaching spec shaped like the (retired) HEDIS Comprehensive Diabetes Care "HbA1c testing"
+# indicator. Current HEDIS/Core Set measures report HbA1c CONTROL (GSD / HBD-AD) and need result
+# values - see README. NOT the NCQA specification.
+measure_id: FAKE_HBA1C_TEST
+title: Diabetes - HbA1c test in the measurement year (FAKE spec)
+fake: true
+real_spec: NCQA HEDIS Glycemic Status Assessment (GSD); Medicaid Adult Core Set HBD-AD
+population:
+  age_min: 18
+  age_max: 75
+  sex: null
+continuous_enrollment:
+  start_offset_months: 0
+  allowable_gaps: 1
+  max_gap_days: 45
+  anchor_enrolled: true
+denominator_event:           # event-based eligibility: diabetes on 2 different dates in MY-1 or MY
+  value_sets: [DIABETES]
+  start_offset_months: -12
+  min_distinct_dates: 2
+exclusions:
+  - {value_set: HOSPICE, start_offset_months: 0}
+numerator:
+  value_sets: [HBA1C_TEST]
+  start_offset_months: 0
+  admin_sources: [CLAIM, LAB]    # a lab-results feed is standard supplemental data: allowed in admin
+  hybrid_sources: [CHART]        # medical-record review finds tests billed nowhere (e.g. point-of-care)
+core_set_benchmark: null
