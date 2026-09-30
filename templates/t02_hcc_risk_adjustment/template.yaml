@@ -1,0 +1,9 @@
+id: t02
+title: HCC risk adjustment
+type: B
+intents: [MEASURE]
+volume: S
+stacks: [RUL, AGG]
+settings: [PAYER, VBC]
+workflows: [B3]
+jd: [risk adjustment methodology, HCC/RAF, payor and regulatory expectations]

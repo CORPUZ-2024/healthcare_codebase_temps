@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Niche Workflows Glossary</title>
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#ffffff; --ink:#1f2328; --muted:#5b6470; --line:#e3e3df;
+  --accent:#1d5c8f; --accent-soft:#e7f0f8; --code-bg:#0f1720; --code-ink:#e6edf3;
+  --chip-f:#fdf1e3; --chip-f-ink:#8a4b0f; --chip-s:#eef0f3; --chip-s-ink:#3b4450;
+  --warn:#fff6d6; --warn-ink:#6b5300;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418; --panel:#171b21; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2a3038;
+    --accent:#6fb0e6; --accent-soft:#1b2a38; --code-bg:#0b0f14; --code-ink:#e6edf3;
+    --chip-f:#3a2a17; --chip-f-ink:#f3c48d; --chip-s:#232a33; --chip-s-ink:#c3cad2;
+    --warn:#2f2a14; --warn-ink:#f0d98a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111418; --panel:#171b21; --ink:#e6e8eb; --muted:#9aa3ad; --line:#2a3038;
+  --accent:#6fb0e6; --accent-soft:#1b2a38; --code-bg:#0b0f14; --code-ink:#e6edf3;
+  --chip-f:#3a2a17; --chip-f-ink:#f3c48d; --chip-s:#232a33; --chip-s-ink:#c3cad2;
+  --warn:#2f2a14; --warn-ink:#f0d98a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.banner{background:var(--warn);color:var(--warn-ink);padding:8px 16px;font-size:13px;text-align:center}
+.top{padding:28px 16px 12px;max-width:1280px;margin:0 auto}
+.top h1{margin:0 0 4px;font-size:26px;letter-spacing:-.01em}
+.top p{margin:0;color:var(--muted);max-width:820px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px 18px;margin:16px 0 0}
+.lg{display:flex;gap:8px;align-items:baseline;font-size:13px;color:var(--muted)}
+.lg .chip{flex:none}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar input,.bar select,.bar button{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.bar input{flex:1 1 220px;min-width:0}
+.bar .count{color:var(--muted);font-size:13px;margin-left:auto}
+.wrap{max-width:1280px;margin:0 auto;padding:16px;display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px}
+nav.toc{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;font-size:13px}
+nav.toc ul{list-style:none;margin:0;padding:0}
+nav.toc > ul > li{margin-bottom:12px}
+nav.toc li li{padding:2px 0 2px 8px;border-left:2px solid var(--line)}
+nav.toc a{color:var(--ink);text-decoration:none}
+nav.toc a:hover{color:var(--accent)}
+nav.toc i{color:var(--accent);font-style:normal;font-size:10px}
+.uc h2{font-size:18px;margin:8px 0 12px;display:flex;align-items:center;gap:10px}
+.ucid{font:600 11px/1 ui-monospace,Consolas,monospace;background:var(--accent-soft);color:var(--accent);padding:4px 6px;border-radius:5px}
+.uc h2 .n{font-size:12px;color:var(--muted);font-weight:400}
+.entry{scroll-margin-top:72px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 12px}
+.entry.stub{opacity:.92}
+.eh{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.eh h3{margin:0;font-size:16px;flex:1 1 280px}
+.gid{font:600 12px/1 ui-monospace,Consolas,monospace;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.f{background:var(--chip-f);color:var(--chip-f-ink)}
+.chip.s{background:var(--chip-s);color:var(--chip-s-ink);font-family:ui-monospace,Consolas,monospace}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;font-size:14px}
+.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.pending{margin-top:10px;font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:8px 10px}
+.io{margin:12px 0;font-size:14px}
+.codewrap{border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.codebar{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--code-bg);color:#9fb0c0;font-size:12px;padding:6px 10px;border-bottom:1px solid #243140}
+.codebar code{color:#cfe3f5}
+.copy{font:inherit;font-size:12px;background:#243140;color:#e6edf3;border:0;border-radius:6px;padding:5px 12px;cursor:pointer}
+.copy:hover{background:#2f4358}
+pre{margin:0;background:var(--code-bg);color:var(--code-ink);padding:12px 14px;overflow:auto;max-height:460px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+h4{margin:16px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+table.cav{width:100%;border-collapse:collapse;font-size:13.5px}
+table.cav th,table.cav td{text-align:left;vertical-align:top;border-top:1px solid var(--line);padding:6px 8px}
+table.cav th{font-size:12px;color:var(--muted);font-weight:600}
+ul.mis,ul.src{margin:0;padding-left:18px;font-size:14px}
+.hidden{display:none!important}
+@media (max-width:860px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .legend{grid-template-columns:1fr}
+  .chip{white-space:normal}
+  nav.toc{position:static;max-height:none}
+  .meta{grid-template-columns:1fr}
+}
+@media print{
+  .bar,.banner,nav.toc,.copy{display:none}
+  .wrap{display:block}
+  pre{max-height:none;white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<div class="banner">MOCK-UP — layout, filters, and entry index are final-shape; {{NFULL}} of {{N}} entries are fully populated (G10, G30) to show the entry format.</div>
+
+<div class="top">
+  <h1>Niche Workflows Glossary</h1>
+  <p>Workflows that didn't become codebase templates, and why. Each full entry carries a copy-paste block that runs on its own and self-tests, plus caveats, solutions, and common mistakes. Companion to <code>healthcare_codebase_temps/templates/</code>.</p>
+  <div class="legend">{{LEGEND}}</div>
+</div>
+
+<div class="bar"><div class="bar-in">
+  <input id="q" type="search" placeholder="Search workflows (e.g. adherence, 835, drift)…" aria-label="Search">
+  <select id="fuc" aria-label="Use case"><option value="">All use cases</option>{{UC_OPTS}}</select>
+  <select id="ff" aria-label="Exclusion factor"><option value="">All factors</option>{{F_OPTS}}</select>
+  <select id="fs" aria-label="Setting"><option value="">All settings</option>{{S_OPTS}}</select>
+  <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="fonly"> Populated only</label>
+  <button id="theme" type="button" aria-label="Toggle theme">Theme</button>
+  <span class="count" id="count"></span>
+</div></div>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Contents"><ul>{{TOC}}</ul></nav>
+  <main id="main">{{SECTIONS}}</main>
+</div>
+
+<script>
+(function(){
+  var q=document.getElementById('q'), fuc=document.getElementById('fuc'), ff=document.getElementById('ff'),
+      fs=document.getElementById('fs'), fonly=document.getElementById('fonly'), count=document.getElementById('count');
+  var entries=[].slice.call(document.querySelectorAll('.entry'));
+  function apply(){
+    var t=q.value.trim().toLowerCase(), n=0;
+    entries.forEach(function(e){
+      var s=e.dataset.s.split(' ');
+      var ok=(!t||e.dataset.text.indexOf(t)>-1)&&(!fuc.value||e.dataset.uc===fuc.value)
+        &&(!ff.value||e.dataset.f.split(' ').indexOf(ff.value)>-1)
+        &&(!fs.value||s.indexOf(fs.value)>-1||s.indexOf('ALL')>-1)
+        &&(!fonly.checked||e.classList.contains('full'));
+      e.classList.toggle('hidden',!ok);
+      var li=document.querySelector('nav.toc li[data-id="'+e.id+'"]'); if(li) li.classList.toggle('hidden',!ok);
+      if(ok) n++;
+    });
+    document.querySelectorAll('section.uc').forEach(function(sec){
+      var vis=sec.querySelectorAll('.entry:not(.hidden)').length;
+      sec.classList.toggle('hidden',!vis);
+      var tli=document.querySelector('nav.toc li.tuc[data-uc="'+sec.dataset.uc+'"]'); if(tli) tli.classList.toggle('hidden',!vis);
+    });
+    count.textContent=n+' of '+entries.length+' workflows';
+  }
+  [q,fuc,ff,fs,fonly].forEach(function(el){el.addEventListener('input',apply);el.addEventListener('change',apply);});
+  apply();
+
+  document.querySelectorAll('.copy').forEach(function(b){
+    b.addEventListener('click',function(){
+      var txt=b.closest('.codewrap').querySelector('code').innerText;
+      function done(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1400);}
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback);}else{fallback();}
+      function fallback(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+        try{document.execCommand('copy');done();}catch(e){b.textContent='Select + Ctrl+C';}document.body.removeChild(ta);}
+    });
+  });
+
+  var root=document.documentElement;
+  document.getElementById('theme').addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    var nxt=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',nxt);
+  });
+})();
+</script>
+</body>
+</html>

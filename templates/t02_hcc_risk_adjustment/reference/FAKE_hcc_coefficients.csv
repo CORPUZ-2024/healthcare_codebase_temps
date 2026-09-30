@@ -1,0 +1,36 @@
+model_version,variable,coefficient,label
+V24,DIAB_NC,0.105,Diabetes without complication
+V24,DIAB_CC,0.302,Diabetes with chronic complications
+V24,CHF,0.331,Heart failure
+V24,COPD,0.335,Chronic obstructive pulmonary disease
+V24,ASTHMA,0.210,Asthma (FAKE: paid in V24-like model only)
+V24,CKD3,0.069,Chronic kidney disease stage 3
+V24,CKD4,0.289,Chronic kidney disease stage 4
+V24,CKD5,0.815,Chronic kidney disease stage 5
+V24,MDD,0.309,Major depressive disorder
+V24,SCHIZ,0.524,Schizophrenia
+V24,CP,0.339,Cerebral palsy
+V24,QUAD,1.068,Quadriplegia
+V24,MORBID_OB,0.250,Morbid obesity
+V24,CANCER_MET,2.659,Metastatic cancer
+V24,CANCER_LUNG,1.024,Lung cancer
+V24,DIAB_CHF,0.121,Interaction: diabetes x heart failure
+V24,CHF_COPD,0.155,Interaction: heart failure x COPD
+V24,D4P,0.100,Four or more payment HCCs
+V28,DIAB_NC,0.166,Diabetes without complication
+V28,DIAB_CC,0.166,Diabetes with chronic complications (FAKE: constrained to equal DIAB_NC)
+V28,CHF,0.360,Heart failure
+V28,COPD,0.319,Chronic obstructive pulmonary disease
+V28,CKD3,0.127,Chronic kidney disease stage 3
+V28,CKD4,0.514,Chronic kidney disease stage 4
+V28,CKD5,0.815,Chronic kidney disease stage 5
+V28,MDD,0.299,Major depressive disorder
+V28,SCHIZ,0.475,Schizophrenia
+V28,CP,0.360,Cerebral palsy
+V28,QUAD,1.100,Quadriplegia
+V28,MORBID_OB,0.186,Morbid obesity
+V28,CANCER_MET,4.209,Metastatic cancer
+V28,CANCER_LUNG,1.136,Lung cancer
+V28,DIAB_CHF,0.112,Interaction: diabetes x heart failure
+V28,CHF_COPD,0.150,Interaction: heart failure x COPD
+V28,D4P,0.080,Four or more payment HCCs

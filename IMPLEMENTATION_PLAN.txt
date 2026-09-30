@@ -1,0 +1,771 @@
+================================================================================
+HEALTHCARE CODEBASE TEMPLATES — IMPLEMENTATION PLAN  (DRAFT v0.1 — FOR REVIEW)
+Repo target : github.com/CORPUZ-2024/healthcare_codebase_temps
+Local target: C:\Users\16502\Documents\GitHub\healthcare_codebase_temps
+Source stack: github.com/CORPUZ-2024/healthcare_topics_analytical_stacks
+              (data/analytical_tasks.json — 14 analysis task types)
+              + project docs ANALYSIS_TASK_MAP.txt, TEST_DATA.txt
+Anchor JD   : Staff Healthcare Analyst (home-based, family-led care start-up)
+Status      : SCOPE + MOCK-UP ONLY. No template code is written until the
+              open decisions in Section 9 are confirmed.
+================================================================================
+
+CONTENTS
+  0. Goal, design principles, what "done" means
+  1. TASK 1 — Workflow catalog (grouped by type, intent, volume, stack)
+       1.1 Controlled vocabularies (settings, intents, volume tiers, stacks)
+       1.2 Catalog by TYPE (primary grouping)
+       1.3 Pivot views: by INTENT / by VOLUME / by ANALYTICAL STACK
+       1.4 Traceability: JD bullet -> workflow -> template / glossary
+       1.5 Coverage: repo's 14 analysis tasks -> templates
+  2. TASK 2 — Template roster (16 templates)
+  3. TASK 2 — Standard template anatomy (sub-codebase structure)
+       3.1 File tree   3.2 Docstring standard   3.3 Stub policy
+       3.4 Test tiers   3.5 Data policy   3.6 Mock-up of one real file
+  4. TASK 3 — Master test orchestrator (zero-dependency contract)
+  5. Full repository tree (mock-up)
+  6. TASK 5 — Niche-workflow HTML glossary (scope; mock-up sent separately)
+  7. TASK 4 — Build & delivery plan (phases, repo + local)
+  8. Risks and mitigations
+  9. Open decisions (need your call before coding)
+
+================================================================================
+0. GOAL, DESIGN PRINCIPLES, WHAT "DONE" MEANS
+================================================================================
+GOAL
+  A generalist toolkit that lets you (a) translate a staff-analyst task into
+  code quickly, (b) test and debug it without AI access, and (c) build
+  intuition for analyses you have not run before — each template doubles as
+  a worked lesson.
+
+PRINCIPLES
+  P1  Standalone templates. Each template folder runs with nothing but its own
+      files + its requirements.txt. No template imports another template.
+  P2  Copy, don't import. Shared helpers (synthetic data, schema checks) are
+      COPIED into each template. Duplication is accepted on purpose; it is
+      the price of P1.
+  P3  Orchestrator is an observer. It discovers templates by folder
+      convention and runs their tests in a subprocess. It never imports
+      template code, and templates never reference it. Delete either side
+      and the other still works.
+  P4  Offline first. Every test runs on seeded synthetic data. Public-use
+      files (PUFs) are documented and optional, never required, never
+      committed (inherits TEST_DATA.txt governing rule).
+  P5  Beginner-legible. Plain-English docstrings with numbered steps, worked
+      examples, and "common mistakes" in every function.
+  P6  Runnable at every stage. A freshly cloned template passes its contract
+      tests before you write a single line (see Stub policy, 3.3).
+  P7  Two languages of the job: Python for analysis, SQL "twin" files for the
+      warehouse logic (run locally via DuckDB, no server needed).
+  P8  Windows-native. pathlib everywhere, .bat + .sh launchers, VS Code
+      test-explorer config included.
+
+DONE MEANS
+  - 16 templates, each: `python run.py` produces outputs; `python run.py
+    --selftest` passes without pytest; `pytest` passes (xfails allowed only
+    for marked TODO exercises).
+  - `python orchestrator/run_all_tests.py` runs all 16, writes a summary
+    table + JSON + HTML report, exits non-zero on any real failure.
+  - Glossary HTML with ~31 niche workflows, each with a copy-paste block that
+    runs standalone and self-tests.
+  - This plan committed as IMPLEMENTATION_PLAN.txt at repo root.
+
+================================================================================
+1. TASK 1 — WORKFLOW CATALOG
+================================================================================
+
+1.1 CONTROLLED VOCABULARIES
+--------------------------------------------------------------------------------
+HEALTHCARE SETTINGS (where the workflow is run)
+  S1 PAYER   Health plan / Medicaid MCO / Medicare Advantage / D-SNP
+  S2 VBC     Risk-bearing provider, ACO, VBC enabler (the JD's company type)
+  S3 HOME    Home- & community-based care (HCBS, personal care, family
+             caregiver programs, home health)
+  S4 HOSP    Hospital / health system
+  S5 PAC     Post-acute (SNF, IRF, home health agency, hospice)
+  S6 RX      Pharmacy / PBM
+  S7 GOV     State Medicaid agency / CMS / public health
+  S8 HEOR    Research, HEOR, life sciences, academic
+
+INTENTS (what the workflow is for)
+  STANDARDIZE  make data analytic-ready and definitions consistent
+  DESCRIBE     characterize what happened
+  MEASURE      compute a defined metric to a specification
+  PREDICT      score future risk for individuals
+  EXPLAIN      estimate a causal effect
+  VALUE        translate into dollars / contract terms
+  DESIGN       plan a study or experiment before data exist
+  MONITOR      track over time, detect drift / anomalies
+
+VOLUME TIERS (rows at input grain)
+  XS  < 10K        reference tables, study-design inputs, benchmarks
+  S   10K – 1M     pandas in memory on a laptop
+  M   1M – 50M     pandas chunked or DuckDB on a laptop
+  L   > 50M        push GROUP BY / JOIN to warehouse (dbt / Snowflake /
+                   BigQuery); Python sees aggregates only
+
+ANALYTICAL STACK FAMILIES
+  AGG   aggregation & normalization arithmetic (counts, rates, PMPM)
+  INF   inferential statistics (CIs, hypothesis tests, power)
+  GLM   regression (OLS, logistic, Poisson/NegBin, Gamma)
+  ML    predictive ML (gradient boosting, calibration, clustering)
+  CAU   causal inference (DiD, PSM, ITS)
+  SRV   survival / time-to-event (KM, Cox)
+  LON   longitudinal / mixed-effects models
+  ACT   actuarial methods (completion factors, credibility, corridors)
+  RUL   rule engines (measure specs, crosswalks, contract terms)
+
+TECH STACK FLOOR (every template): python 3.11, pandas, numpy, pyyaml,
+  matplotlib, pytest, duckdb (SQL twin). Extra libs listed per template.
+
+1.2 CATALOG BY TYPE  (primary grouping)
+--------------------------------------------------------------------------------
+Format:  ID  Workflow
+             Intent | Volume | Analytical stack | Settings | -> Destination
+             End-to-end: step 1 > step 2 > ... > deliverable
+
+TYPE A — DATA FOUNDATION & MEASUREMENT INFRASTRUCTURE
+  A1  Claims + eligibility to analytic-ready tables
+        STANDARDIZE | M-L | AGG, RUL | all | -> T00
+        ingest medical (837I/837P-shaped) + pharmacy claims > collapse
+        adjustment/void versions > build member-month spans w/ partial-month
+        proration > validate codes > analytic claim_line + member_month tables
+  A2  Code-set normalization & validity (ICD-10-CM/PCS, CPT/HCPCS, NDC,
+      POS, TOB, revenue code)
+        STANDARDIZE | S-M | RUL | all | -> T00
+        format checks > effective-date validity > crosswalk to categories
+  A3  Metric layer / single source of truth (shared metric definitions,
+      dbt-style models + tests)
+        STANDARDIZE | M-L | AGG, RUL | S1 S2 S3 | -> T14
+        metric YAML > staging/intermediate/mart SQL > schema+data tests >
+        metric catalog doc
+  A4  Interop formats (X12 835/837, FHIR R4, HL7 v2)
+        STANDARDIZE | S-M | RUL | S1 S2 S4 | -> GLOSSARY (G01, G02)
+  A5  Record linkage / master patient index
+        STANDARDIZE | S-M | ML | S2 S3 S7 | -> GLOSSARY (G03)
+
+TYPE B — POPULATION HEALTH & RISK
+  B1  Utilization profiling (IP/ED/SNF/HH per 1,000, ALOS, 30-day
+      readmission, runout-aware trend)
+        DESCRIBE, MONITOR | S-M | AGG | all | -> T01
+        claims > service-category grouper > per-1,000 rates > trend w/
+        runout flag > profile tables + charts
+  B2  Cost-driver decomposition (service category, high-cost claimants,
+      price vs. utilization vs. mix)
+        DESCRIBE, VALUE | S-M | AGG | S1 S2 | -> T05
+  B3  Risk adjustment (CMS-HCC-style RAF: V24/V28 blend, normalization,
+      coding-intensity, demographic factors)
+        MEASURE | S | RUL, AGG | S1 S2 | -> T02
+        dx rows > dx-to-HCC map > hierarchies > coefficients + demographics
+        > normalize > member RAF + audit trail
+  B4  Predictive risk (hospitalization, ED, adverse event)
+        PREDICT | S-M | GLM, ML | S1 S2 S3 | -> T03
+        feature build (lookback) > label (lookahead) > temporal split >
+        logistic baseline + GBM > calibration, AUC, PPV@top-k > scores
+  B5  Acuity tiering & segmentation (rules + k-means, rising-risk)
+        PREDICT, DESCRIBE | S | ML, RUL | S2 S3 | -> T03
+  B6  Comorbidity & avoidable-utilization indices (Charlson/Elixhauser,
+      AHRQ PQI, NYU ED, LACE)
+        MEASURE | S | RUL | S1 S2 S4 | -> GLOSSARY (G05–G08)
+  B7  Provider attribution (plurality of visits)
+        STANDARDIZE | S | RUL | S2 | -> GLOSSARY (G09)
+
+TYPE C — QUALITY & CLINICAL MEASUREMENT
+  C1  HEDIS / Medicaid Core Set style measure rates (continuous enrollment,
+      exclusions, Wilson CI, stability flag)
+        MEASURE | S-M | RUL, INF | S1 S2 S7 | -> T04
+  C2  Member-level care-gap lists (open/closed gaps, outreach file)
+        MEASURE | S-M | RUL | S1 S2 S3 | -> T04
+  C3  Part D adherence (PDC), opioid MME
+        MEASURE | S | RUL | S1 S6 | -> GLOSSARY (G10, G11)
+  C4  Clinical outcome definitions (30-day all-cause readmission,
+      hospitalization-free days)
+        MEASURE | S | RUL | S2 S3 S4 | -> T01 (defs), T11 (analysis)
+
+TYPE D — HEALTH ECONOMICS & VALUE-BASED CARE
+  D1  Total cost of care / PMPM (proration, p99 truncation, runout)
+        MEASURE, VALUE | M | AGG | S1 S2 | -> T05
+  D2  Medical loss ratio impact
+        VALUE | XS-S | AGG | S1 S2 | -> T05
+  D3  Intervention ROI / cost offset / break-even / sensitivity
+        VALUE, EXPLAIN | S | AGG, CAU-lite | S2 S3 | -> T06
+        cohort + matched comparison > pre/post PMPM > gross savings >
+        program cost > ROI, break-even PMPM > tornado sensitivity
+  D4  VBC contract modeling (shared savings/loss, MSR/MLR corridors,
+      care-management fee, quality gate, stop-loss, scenario grid)
+        VALUE | XS-S | RUL, AGG | S1 S2 | -> T07
+  D5  Reconciliation replication (validate vs. MSSP ACO PUF)
+        VALUE, MEASURE | XS | AGG | S2 | -> T07
+  D6  Episode cost (trigger + look-back/forward windows)
+        MEASURE | M | RUL, AGG | S2 S4 S5 | -> T05 (optional module)
+  D7  Cost-effectiveness (ICER/QALY, Markov), budget impact
+        VALUE | XS | ACT-like | S8 | -> GLOSSARY (G18, G19)
+
+TYPE E — ACTUARIAL & FINANCIAL OPERATIONS
+  E1  Claims completion / IBNR (lag triangles, completion factors)
+        MEASURE | S-M | ACT | S1 S2 | -> T08
+  E2  Trend & forecast (PMPM/utilization projection with intervals)
+        MONITOR, PREDICT | XS-S | ACT, GLM | S1 S2 | -> T08
+  E3  Credibility weighting, stop-loss pricing, RADV sampling
+        VALUE | XS-S | ACT | S1 | -> GLOSSARY (G22–G24)
+
+TYPE F — EVIDENCE GENERATION / OUTCOMES RESEARCH
+  F1  Study design (power/MDE, randomization, SAP skeleton)
+        DESIGN | XS | INF | S2 S3 S8 | -> T09
+  F2  Quasi-experimental evaluation (DiD + parallel trends, PSM + SMD
+      balance, interrupted time series)
+        EXPLAIN | S-M | CAU, GLM | S2 S3 S7 S8 | -> T10
+  F3  Time-to-event (Kaplan–Meier, log-rank, Cox PH, PH diagnostics)
+        EXPLAIN, PREDICT | S | SRV | S2 S3 S4 S8 | -> T11
+  F4  Patient-/caregiver-reported outcomes (instrument scoring, change
+      scores, MCID responders, mixed models for repeated measures)
+        MEASURE, EXPLAIN | XS-S | LON, INF | S3 S8 | -> T12
+  F5  Advanced designs (synthetic control, RDD, IV, competing risks,
+      multiple imputation, two-part cost models, bootstrap CIs)
+        EXPLAIN | S | CAU, SRV, GLM | S8 | -> GLOSSARY (G13–G17, G20, G21)
+
+TYPE G — PERFORMANCE, OPERATIONS & CROSS-FUNCTIONAL MEASUREMENT
+  G1  Provider / caregiver / panel benchmarking (O/E, empirical-Bayes
+      shrinkage, funnel plot, external benchmark w/ vintage check)
+        MEASURE, MONITOR | S | INF, AGG | S1 S2 S3 | -> T13
+  G2  Measurement framework & experiment readout (metric tree, guardrail
+      metrics, A/B or pre/post readout)
+        DESIGN, MEASURE | XS-S | INF, RUL | S2 S3 | -> T14
+  G3  Patient lifecycle funnel, prior-auth turnaround, denial / RCM KPIs
+        MONITOR | S | AGG, SRV-lite | S1 S2 S3 | -> T15
+  G4  EVV compliance, authorized-vs-delivered hours (home care)
+        MONITOR | S-M | RUL, AGG | S3 S7 | -> GLOSSARY (G25)
+  G5  Medicaid churn / redetermination, dual-eligible identification
+        DESCRIBE | M | AGG | S1 S7 | -> GLOSSARY (G26, G27)
+  G6  AI/ML data readiness (drift PSI, subgroup calibration, model card)
+        MONITOR | S | INF | S1 S2 S3 | -> GLOSSARY (G28, G29)
+  G7  Publication privacy (small-cell suppression, de-identification)
+        STANDARDIZE | XS-S | RUL | all | -> GLOSSARY (G30)
+  G8  Clinical NLP (note extraction with negation)
+        STANDARDIZE | S-M | ML | S2 S3 S4 | -> GLOSSARY (G31)
+
+1.3 PIVOT VIEWS
+--------------------------------------------------------------------------------
+BY INTENT
+  STANDARDIZE  A1 A2 A3 A4 A5 B7 G7 G8            -> T00 T14 + glossary
+  DESCRIBE     B1 B2 B5 G5                         -> T01 T03 T05
+  MEASURE      B3 B6 C1 C2 C3 C4 D1 D5 D6 E1 F4 G1 G2 -> T02 T04 T05 T08 T12 T13
+  PREDICT      B4 B5 E2 F3                         -> T03 T08 T11
+  EXPLAIN      D3 F2 F3 F4 F5                      -> T06 T10 T11 T12
+  VALUE        B2 D1 D2 D3 D4 D5 D7 E3             -> T05 T06 T07
+  DESIGN       F1 G2                               -> T09 T14
+  MONITOR      B1 E2 G1 G3 G4 G6                   -> T01 T08 T13 T15
+
+BY VOLUME (default synthetic size in brackets: test / demo)
+  XS  T07 T09 T12 [200 / 2K]
+  S   T02 T03 T06 T10 T11 T13 T14 T15 [500 / 20K]
+  M   T00 T01 T04 T05 T08 [2K lines / 200K lines]  + DuckDB SQL twin
+  L   none by default; every M template documents its warehouse
+      push-down pattern in sql/ and README "Scaling up" section
+
+BY ANALYTICAL STACK
+  AGG  T00 T01 T05 T06 T07 T15     INF  T04 T09 T13 T14
+  GLM  T03 T06 T10                 ML   T03
+  CAU  T10 (T06 lite)              SRV  T11 (T15 lite)
+  LON  T12                         ACT  T08 (T07)
+  RUL  T00 T02 T04 T07 T14
+
+1.4 TRACEABILITY — JD BULLET -> WORKFLOW -> TEMPLATE
+--------------------------------------------------------------------------------
+  Stratification & risk models (utilization, hospitalization, acuity)  B4 B5 -> T03
+  Own risk adjustment methodology (HCC/RAF)                            B3    -> T02
+  Payor claims analysis (medical + pharmacy), cost drivers, gaps       A1 B1 B2 C2 -> T00 T01 T05 T04
+  Cost of care & ROI (TCOC, cost offset, MLR impact)                   D1 D2 D3 -> T05 T06
+  VBC / risk-sharing structures (shared savings, CM fees)              D4 D5 -> T07
+  Methodology Finance relies on with payors/actuaries/audits           E1 E2 D5 -> T08 T07
+  Clinical study design, biostatistics (readmission, caregiver burden, QoL)
+                                                                       F1-F4 -> T09 T10 T11 T12
+  Quality measurement (HEDIS, Stars, state Medicaid)                   C1 C2 C3 -> T04 + G10
+  Shared metrics, data models, dashboards (single source of truth)     A3 G2 -> T14
+  Measurement frameworks for interventions / experiments              G2 F1 -> T14 T09
+  Advanced SQL, Python/R, predictive modeling                          all  -> SQL twins + T03
+  Claims structures, ICD-10 / CPT / NDC                                A2    -> T00
+  dbt, Git, cloud warehouse, BI                                        A3    -> T14 (+ repo/CI)
+  PREF: causal inference, survival, predictive                         F2 F3 B4 -> T10 T11 T03
+  PREF: Medicaid / Medicare / duals dynamics                           G5    -> glossary G26 G27
+  PREF: prior auth, revenue cycle, patient lifecycle                   G3    -> T15 (+ G01)
+  PREF: data requirements of AI / agentic clinical systems             G6    -> glossary G28 G29
+
+1.5 COVERAGE — REPO'S 14 ANALYSIS TASKS -> TEMPLATES
+--------------------------------------------------------------------------------
+  descriptive -> T01     rate_measure -> T04     pmpm -> T05
+  trend -> T01, T08      comparison -> T06, T09  regression -> T03, T06
+  risk_score -> T02      benchmark -> T13        provider_profile -> T13
+  reconciliation -> T07  segmentation -> T03     episode -> T05 (module)
+  forecast -> T08        causal -> T10
+  JD-only additions (not in the 14): survival (T11), PRO/longitudinal (T12),
+  study design (T09), metric layer/dbt (T14), ops lifecycle (T15),
+  claims foundation (T00).
+  Carried-over caveats: every caveat in analytical_tasks.json for the
+  mapped task is copied into that template's README "Caveats" section and
+  becomes at least one test (e.g., PMPM proration 15/31 = 0.484 MM).
+
+================================================================================
+2. TASK 2 — TEMPLATE ROSTER (16)
+================================================================================
+ ID  Folder name                        Type  Primary methods            Extra libs            Public data (optional)
+ --- ---------------------------------- ----- -------------------------- --------------------- ------------------------------
+ T00 t00_claims_foundation              A     version collapse, member-   —                     CMS DE-SynPUF (sample 1)
+                                              month proration, code checks
+ T01 t01_utilization_profiling          B     per-1,000 rates, ALOS,      —                     DE-SynPUF
+                                              readmit flag, runout trend
+ T02 t02_hcc_risk_adjustment            B     dx->HCC map, hierarchies,   —                     CMS-HCC model software tables
+                                              RAF, V24/V28 blend                                (user-downloaded; ships FAKE
+                                                                                                toy coefficients, labeled)
+ T03 t03_predictive_risk_stratification B     logistic + GBM, calibration,scikit-learn          DE-SynPUF
+                                              EPV check, acuity tiers,
+                                              k-means w/ silhouette
+ T04 t04_quality_measures_care_gaps     C     continuous enrollment,      scipy                 Medicaid Core Set public rates
+                                              denominators/exclusions,                          (benchmark only)
+                                              Wilson CI, gap list
+ T05 t05_tcoc_pmpm_mlr                  D     PMPM, service categories,   —                     CMS Geographic Variation PUF
+                                              p99 truncation, MLR,
+                                              episode windows (module)
+ T06 t06_roi_cost_offset                D     matched pre/post, cost      scipy, statsmodels    —
+                                              offset, break-even, tornado
+ T07 t07_vbc_contract_modeling          D     shared savings/loss, MSR,   —                     MSSP ACO PUF (reconcile to
+                                              corridors, CM fee, quality                        published savings)
+                                              gate, scenario grid
+ T08 t08_claims_completion_forecast     E     lag triangle, completion    statsmodels           DE-SynPUF (paid vs incurred)
+                                              factors, IBNR, trend,
+                                              SARIMAX w/ intervals
+ T09 t09_study_design_power             F     power/MDE (means, props,    statsmodels           —
+                                              clusters), randomization,
+                                              SAP generator
+ T10 t10_causal_impact_evaluation       F     DiD + event study, PSM +    statsmodels, sklearn  —
+                                              SMD, ITS segmented reg.
+ T11 t11_survival_time_to_event         F     KM, log-rank, Cox PH,       lifelines             —
+                                              Schoenfeld check
+ T12 t12_patient_reported_outcomes      F     instrument scoring, reverse statsmodels           MEPS (SF-12/VR-12 items)
+                                              items, MCID, MMRM/mixed
+ T13 t13_provider_benchmark_profiling   G     O/E, EB shrinkage, funnel,  scipy                 Care Compare / Physician PUF
+                                              vintage-matched benchmark
+ T14 t14_metric_layer_dbt_style         G     metric YAML, staged SQL     duckdb (required)     —
+                                              models, schema/data tests,
+                                              experiment readout
+ T15 t15_ops_lifecycle_prior_auth       G     referral->start-of-care     —                     Payer PA metrics posted under
+                                              funnel, PA turnaround,                            CMS-0057-F (verify availability
+                                              denial rates, retention                           at build time)
+
+Home-care framing: synthetic data for T01, T03, T06, T11, T12, T15 includes a
+"family caregiver program" enrollment flag and caregiver-hours fields so every
+lesson can be told in the JD's business context.
+
+================================================================================
+3. TASK 2 — STANDARD TEMPLATE ANATOMY
+================================================================================
+
+3.1 FILE TREE (identical skeleton in all 16; example = T05)
+--------------------------------------------------------------------------------
+t05_tcoc_pmpm_mlr/
+├── README.md               What / why / when; inputs & outputs; run steps;
+│                           "Explain it to Finance" paragraph; caveats;
+│                           exercises (L1/L2/L3); scaling-up notes
+├── template.yaml           Metadata ONLY (id, type, intents, volume,
+│                           stacks, settings, jd_bullets). Read as text
+│                           by the orchestrator; nothing imports it.
+├── requirements.txt        Exact extra deps for this template only
+├── run.py                  Entry point:
+│                             python run.py              -> full demo run
+│                             python run.py --selftest   -> no-pytest checks
+│                             python run.py --data puf --path <file>
+├── pipeline/
+│   ├── __init__.py
+│   ├── config.py           @dataclass Config: every tunable parameter with
+│   │                       a comment (e.g., truncation_pct=0.99)
+│   ├── synth.py            Seeded synthetic generator(s) with defect
+│   │                       injection: gen_claims(n, seed, defects=[...])
+│   ├── load.py             Read CSV/Parquet/PUF; column rename map;
+│   │                       schema assertion
+│   ├── checks.py           Data-quality + assumption checks returning a
+│   │                       Findings list (id, severity, message, fix)
+│   ├── transform.py        Cohort / grain transforms (e.g., member-month)
+│   ├── analyze.py          The method (e.g., compute_pmpm, compute_mlr)
+│   └── report.py           Tables -> CSV, charts -> PNG, summary.md
+├── sql/
+│   ├── 01_stg_claims.sql   SQL twin of transform.py (DuckDB dialect,
+│   ├── 02_member_months.sql notes for Snowflake/BigQuery differences)
+│   └── 03_pmpm.sql
+├── tests/
+│   ├── conftest.py         Adds template root to sys.path; tiny seeded
+│   │                       fixtures (n<=500, runs < 3 s)
+│   ├── test_contract.py    Shapes, columns, dtypes, no-NaN rules
+│   ├── test_known_answer.py Hand-computed cases (15/31 = 0.484 MM)
+│   ├── test_checks.py      Each defect injected -> expected finding fires
+│   ├── test_sql_twin.py    pandas result == DuckDB SQL result
+│   └── test_exercises.py   xfail placeholders for L1/L2/L3 TODOs
+├── data/                   gitignored (PUF downloads go here)
+│   └── README.md           where to download, expected columns
+└── outputs/                gitignored (run.py writes here)
+
+3.2 DOCSTRING STANDARD (NumPy style + 4 beginner sections)
+--------------------------------------------------------------------------------
+  Summary line  -> one sentence, plain English
+  Healthcare context -> why an analyst does this, who consumes it
+  Parameters / Returns -> with column names and units
+  Steps -> numbered pseudo-code that mirrors the body line by line
+  Example -> a doctest on 3-5 rows that runs
+  Common mistakes -> 2-4 bullets
+  TODO[L1|L2|L3] -> graded extension exercises
+
+3.3 STUB POLICY (recommended "hybrid" — see Decision D1)
+--------------------------------------------------------------------------------
+  - CORE functions ship a minimal, correct baseline so run.py and contract
+    + known-answer tests PASS on first clone.
+  - EXTENSIONS are stubbed: body contains the numbered steps as comments
+    and `raise NotImplementedError("TODO[L2]: ...")`.
+  - Each extension has a test in test_exercises.py marked
+    @pytest.mark.xfail(raises=NotImplementedError, strict=False).
+    When you implement it the test turns XPASS -> you remove the marker.
+  - The orchestrator reports PASS / FAIL / TODO(xfail) separately, so the
+    summary doubles as a learning checklist.
+
+3.4 TEST TIERS (per template)
+--------------------------------------------------------------------------------
+  contract     output shape/columns/dtypes                 always pass
+  known_answer tiny hand-computed inputs                   always pass
+  checks       injected defects trigger findings           always pass
+  sql_twin     pandas == SQL (M-tier templates + T14)      always pass
+  exercises    TODO extensions                             xfail until done
+  selftest     same core asserts, plain `assert`, no pytest (run.py flag)
+  Runtime budget: < 10 s per template, < 3 min for all 16.
+
+3.5 DATA POLICY
+--------------------------------------------------------------------------------
+  - Only generated data is committed (tests/fixtures + tiny samples).
+  - Synthetic realism rules (from TEST_DATA.txt): right-skewed cost with long
+    tail, Dec/Jan seasonality, 3-month runout tail, 3–5% claim versions,
+    1–2% overlapping enrollment spans, Luhn-valid NPIs, ZIPs with leading
+    zeros, zero/negative paid lines.
+  - Code values are FORMAT-valid, not clinically curated; clinical code
+    lists used in measure logic are small illustrative excerpts and say so.
+  - Any coefficient/weight table that is published by CMS or licensed
+    (HCC coefficients, NCQA value sets) ships as a labeled FAKE toy table;
+    README shows where to get the real one.
+
+3.6 MOCK-UP OF ONE REAL FILE  (t05 .../pipeline/analyze.py, excerpt)
+--------------------------------------------------------------------------------
+def compute_member_months(enrollment: pd.DataFrame,
+                          period_start: str,
+                          period_end: str) -> pd.DataFrame:
+    """Convert enrollment spans into prorated member-months per calendar month.
+
+    Healthcare context
+    ------------------
+    PMPM = cost / member-months. The denominator must credit partial months
+    fractionally: a member enrolled 15 of 31 days in January contributes
+    15/31 = 0.484 member-months, not 1.0. Getting this wrong makes cost per
+    member look lower than it is, which Finance will carry into a payor
+    negotiation.
+
+    Parameters
+    ----------
+    enrollment : DataFrame
+        One row per enrollment span. Required columns:
+        member_id (str), enroll_start_dt (date), enroll_end_dt (date,
+        inclusive), lob_cd (str, e.g. 'MCD' Medicaid).
+    period_start, period_end : str
+        'YYYY-MM-DD' analysis window, inclusive.
+
+    Returns
+    -------
+    DataFrame with columns member_id, month (Period[M]), lob_cd,
+    member_months (float in (0, 1]).
+
+    Steps
+    -----
+    1. Clip each span to [period_start, period_end].
+    2. Explode each span into the calendar months it touches.
+    3. For each month: days_enrolled = overlap(span, month) in days.
+    4. member_months = days_enrolled / days_in_month.
+    5. Sum by member_id, month, lob_cd (merges overlapping spans — see
+       checks.check_overlapping_spans, which must run first).
+
+    Example
+    -------
+    >>> e = pd.DataFrame({"member_id": ["A"], "lob_cd": ["MCD"],
+    ...     "enroll_start_dt": pd.to_datetime(["2025-01-17"]),
+    ...     "enroll_end_dt": pd.to_datetime(["2025-02-28"])})
+    >>> compute_member_months(e, "2025-01-01", "2025-12-31")["member_months"].round(3).tolist()
+    [0.484, 1.0]
+
+    Common mistakes
+    ---------------
+    - Counting a member as 1.0 for any month they touch (inflates denominator).
+    - Treating enroll_end_dt as exclusive (drops the last day).
+    - Summing overlapping spans without de-duplicating (member_months > 1).
+
+    TODO[L2]: add `mode="first_of_month"` for payers that credit a full
+    month if enrolled on the 1st (a common contract convention).
+    """
+
+================================================================================
+4. TASK 3 — MASTER TEST ORCHESTRATOR
+================================================================================
+ZERO-DEPENDENCY CONTRACT (enforced by the orchestrator's own tests)
+  C1 Discovery is by convention only: a template = any folder matching
+     templates/t??_*/ that contains tests/ (template.yaml optional, read as
+     plain YAML text for grouping filters).
+  C2 Each template runs in its own subprocess:
+        [python, -m, pytest, tests, -q, --junitxml=<tmp>/<id>.xml]
+     with cwd = template folder. No sys.path sharing, no imports.
+  C3 No template file references "orchestrator" (AST + text scan).
+  C4 No template imports another template (AST scan of import statements).
+  C5 Orchestrator imports only stdlib (+ optional pyyaml). It has no
+     requirements on any template's libraries.
+  C6 Removing orchestrator/ leaves every template fully runnable; removing
+     any template leaves the orchestrator running (it finds fewer).
+
+orchestrator/
+├── README.md
+├── run_all_tests.py        CLI
+├── discover.py             folder scan -> list[TemplateInfo]
+├── runner.py               subprocess execution, timeouts, junit parse
+├── report.py               console table, summary.json, summary.md,
+│                           summary.html (static, no JS deps)
+└── tests/
+    ├── test_discover.py    fake templates built in tmp_path
+    ├── test_runner.py      pass/fail/xfail/timeout/missing-pytest cases
+    ├── test_report.py
+    └── test_independence.py  C3 + C4 + C5 scans over the real repo
+
+CLI
+  python orchestrator/run_all_tests.py                 run all
+  ... --list                                           list discovered
+  ... --only t03,t05      --group D     --intent VALUE filters
+  ... --tier contract,known_answer                     subset of tiers (-k)
+  ... --selftest                                       use run.py --selftest
+                                                       (no pytest needed)
+  ... --jobs 4            --timeout 120   --fail-fast
+  ... --python .venv\Scripts\python.exe                interpreter override
+  Exit code: 0 all PASS/TODO; 1 any FAIL/ERROR; 2 discovery error.
+
+SAMPLE CONSOLE OUTPUT (mock)
+  ID   TEMPLATE                          PASS  FAIL  TODO  SEC   STATUS
+  t00  claims_foundation                   18     0     3  2.1   OK
+  t02  hcc_risk_adjustment                 14     0     4  1.4   OK
+  t10  causal_impact_evaluation            11     1     5  4.8   FAIL
+  ...
+  16 templates | 212 passed | 1 failed | 51 TODO | 38.2 s
+  Report: orchestrator/reports/2026-10-01T09-14/summary.html
+
+================================================================================
+5. FULL REPOSITORY TREE (mock-up)
+================================================================================
+healthcare_codebase_temps/
+├── README.md                     Quick start (Windows + macOS), map of
+│                                 templates by JD area, how to add one
+├── IMPLEMENTATION_PLAN.txt       final version of this document
+├── WORKFLOW_CATALOG.md           Section 1 as a browsable table
+├── requirements-dev.txt          union of all template deps (one venv for
+│                                 convenience; templates still declare own)
+├── run_all_tests.bat / .sh       thin wrappers for the orchestrator
+├── .gitignore                    **/data/*, **/outputs/*, reports/, .venv
+├── .vscode/
+│   ├── settings.json             pytest discovery per template
+│   └── launch.json               "Run template", "Debug current test"
+├── .github/workflows/ci.yml      orchestrator on push (ubuntu + windows)
+├── templates/
+│   ├── t00_claims_foundation/
+│   ├── t01_utilization_profiling/
+│   ├── t02_hcc_risk_adjustment/
+│   ├── t03_predictive_risk_stratification/
+│   ├── t04_quality_measures_care_gaps/
+│   ├── t05_tcoc_pmpm_mlr/
+│   ├── t06_roi_cost_offset/
+│   ├── t07_vbc_contract_modeling/
+│   ├── t08_claims_completion_forecast/
+│   ├── t09_study_design_power/
+│   ├── t10_causal_impact_evaluation/
+│   ├── t11_survival_time_to_event/
+│   ├── t12_patient_reported_outcomes/
+│   ├── t13_provider_benchmark_profiling/
+│   ├── t14_metric_layer_dbt_style/
+│   └── t15_ops_lifecycle_prior_auth/
+├── orchestrator/                 (Section 4)
+├── glossary/
+│   └── niche_workflows_glossary.html
+└── docs/
+    ├── CONVENTIONS.md            naming (_id _dt _cd _amt _cnt _flag),
+    │                             docstring standard, stub policy
+    ├── ADDING_A_TEMPLATE.md      copy t_template_skeleton, rename, go
+    └── DEBUG_WITHOUT_AI.md       pdb/breakpoint(), pytest -x --pdb,
+                                  print-the-shape habit, reading tracebacks
+(also: templates/_skeleton/ — an empty-but-runnable template to copy;
+ discovery ignores folders starting with "_")
+
+PER-TEMPLATE SPECIFICS (beyond the standard skeleton)
+  t00  pipeline/codesets.py (format regex for ICD-10-CM, CPT/HCPCS,
+       NDC 10->11 normalization, POS, TOB), sql/ 4 models
+  t02  reference/FAKE_hcc_coefficients.csv, FAKE_dx_to_hcc.csv,
+       hierarchies.csv; pipeline/blend.py (V24/V28 weights by year)
+  t03  pipeline/features.py, label.py, model.py, evaluate.py
+       (calibration plot, PPV@top-5%), stratify.py (tiers + k-means)
+  t04  measures/*.yaml (one YAML per measure: denominator, numerator,
+       exclusions, lookback), pipeline/measure_engine.py
+  t05  pipeline/episode.py (optional module)
+  t07  contracts/*.yaml (MSSP-like, Medicaid MCO sub-cap, CM-fee+upside);
+       pipeline/scenarios.py (grid over trend x savings x quality)
+  t08  pipeline/triangle.py, completion.py, forecast.py
+  t09  pipeline/sap_template.md.j2 (statistical analysis plan generator)
+  t10  pipeline/did.py, psm.py, its.py, diagnostics.py
+  t12  instruments/*.yaml (item lists, reverse-scored items, scoring
+       rules; public-domain or FAKE instruments only), pipeline/mmrm.py
+  t14  models/staging|intermediate|marts/*.sql, metrics.yaml,
+       pipeline/dbt_lite.py (runs SQL in order, runs not_null/unique/
+       accepted_values tests), pipeline/experiment_readout.py
+  t15  pipeline/funnel.py, pa_turnaround.py, denials.py
+
+================================================================================
+6. TASK 5 — NICHE-WORKFLOW HTML GLOSSARY (scope)
+================================================================================
+File: glossary/niche_workflows_glossary.html (single file, no external
+deps except optional Google Font; works offline by double-click).
+
+EXCLUSION FACTORS (why each is a snippet, not a template)
+  F1 LICENSED    spec or code set needs a license (NCQA, PQA, AMA CPT,
+                 3M/Milliman groupers) — snippet shows an open approximation
+  F2 RESTRICTED  real data needs a DUA/registration (T-MSIS, RIF, ADI)
+  F3 NICHE       narrow setting or infrequent for this role
+  F4 HEAVY-DEP   needs libraries beyond the shared floor
+  F5 SNIPPET     one function; a full pipeline would be over-engineering
+  F6 SIGN-OFF    real use needs credentialed sign-off (actuarial, audit)
+  F7 FORMAT      interop format with no free real test data
+
+ENTRIES (31) BY USE CASE                                        factors
+  UC1 Data standards & interoperability
+    G01 X12 835 remittance -> paid/denied lines + CARC codes     F7 F5
+    G02 FHIR R4 bundle flattening (Synthea)                      F7 F4
+    G03 Fuzzy record linkage / member match                      F4
+    G04 Continuous enrollment with allowable gap                 F5
+  UC2 Clinical classification & risk indices
+    G05 Charlson / Elixhauser comorbidity index                  F5
+    G06 NYU ED algorithm (ED visit classification)               F5 F1
+    G07 AHRQ PQI potentially avoidable hospitalizations          F5 F1
+    G08 LACE readmission index                                   F5
+    G09 Provider attribution (plurality of E&M visits)           F5
+  UC3 Pharmacy
+    G10 PDC adherence (Stars-style)                              F5 F1
+    G11 Opioid MME per day                                       F5
+    G12 NDC normalization (10 -> 11 digit) + package mapping     F5
+  UC4 Advanced causal & HEOR
+    G13 Synthetic control                                        F4 F3
+    G14 Regression discontinuity                                 F3
+    G15 Instrumental variables (2SLS)                            F3
+    G16 Competing risks (cumulative incidence)                   F4
+    G17 Multiple imputation (chained equations)                  F5
+    G18 Cost-effectiveness: ICER + Markov QALY                   F3
+    G19 Budget impact model                                      F3
+    G20 Two-part cost model (logit + Gamma GLM)                  F5
+    G21 Bootstrap CI for cost differences                        F5
+  UC5 Actuarial & finance
+    G22 Credibility weighting (limited fluctuation)              F6
+    G23 Stop-loss / risk-corridor pricing sketch                 F6
+    G24 RADV-style sample & extrapolation                        F6 F2
+  UC6 Home-based care & Medicaid operations
+    G25 EVV compliance + authorized-vs-delivered hours           F3 F7
+    G26 Medicaid churn / redetermination spells                  F2 F3
+    G27 Dual-eligible identification (dual status codes)         F2
+  UC7 AI/ML governance & privacy
+    G28 Population stability index (drift)                       F5
+    G29 Subgroup calibration / fairness audit                    F5
+    G30 Small-cell suppression (cell size < 11)                  F5
+    G31 Clinical NLP with negation (rule-based)                  F4
+
+EACH ENTRY CONTAINS
+  header (id, name, use case, settings, factor chips) | "Why not a
+  template" (factor + one sentence) | "Promote to template when..." |
+  inputs/outputs | COPY BLOCK (imports, function headers, full body,
+  beginner docstrings, `if __name__ == "__main__":` self-test on tiny
+  synthetic data) | Caveats + solutions (table) | Common mistakes |
+  Sources (issuer, not repeater)
+
+PAGE FEATURES
+  search box; filter by use case, factor, setting; copy button per block;
+  expand/collapse; light/dark theme; print stylesheet.
+  Build rule: every copy block is extracted and executed by
+  glossary/test_glossary_blocks.py before publishing (the glossary gets its
+  own test so snippets can't rot). This test is discovered by the
+  orchestrator only via an opt-in flag (--include-glossary), keeping C1–C6.
+
+================================================================================
+7. TASK 4 — BUILD & DELIVERY PLAN
+================================================================================
+PHASES (each ends with the orchestrator green before the next starts)
+  P0  Repo skeleton, _skeleton template, orchestrator + its tests, CI,
+      .vscode, docs/CONVENTIONS.md
+  P1  T00, T05, T01            (foundation + TCOC + utilization)
+  P2  T02, T04, T03            (risk adjustment, quality, predictive)
+  P3  T06, T07, T08            (ROI, VBC contracts, IBNR/forecast)
+  P4  T09, T10, T11, T12       (evidence generation)
+  P5  T13, T14, T15            (benchmarking, metric layer, ops)
+  P6  Glossary (31 entries) + test_glossary_blocks.py
+  P7  README, WORKFLOW_CATALOG.md, final IMPLEMENTATION_PLAN.txt, full
+      orchestrator run on Windows-style paths, tag v1.0
+  Scale estimate: ~180–220 files; ~9–12K lines incl. docstrings/tests.
+  Each phase is a separate commit (or PR) so you can review in chunks.
+
+DELIVERY — current blockers found during scoping
+  - github.com/CORPUZ-2024/healthcare_codebase_temps is not reachable from
+    this session (private, empty, or not yet created; no GitHub credentials
+    here).
+  - This session is not linked to your computer, so C:\Users\16502\...
+    is not reachable yet.
+  Options (Decision D4):
+    (a) Link this task to your computer in the Claude desktop app -> I build
+        directly in C:\...\healthcare_codebase_temps and run git there
+        (uses your existing GitHub credentials). Best fit for "via VS Code".
+    (b) I build here and send a zip per phase; you unzip into the local
+        folder, open in VS Code, commit + push.
+    (c) Make the repo public (or add a fine-grained token) — I still can't
+        push without credentials, so (a) or (b) is required either way.
+
+VS CODE SETUP (documented in README)
+  py -3.11 -m venv .venv  ->  .venv\Scripts\activate  ->
+  pip install -r requirements-dev.txt  ->  Testing panel discovers each
+  template's tests  ->  run_all_tests.bat for the full sweep.
+
+================================================================================
+8. RISKS AND MITIGATIONS
+================================================================================
+  R1 Toy coefficients/value sets mistaken for real  -> FAKE_ prefix in file
+     names, banner in outputs, README "get the real table" section.
+  R2 Duplicated helpers drift between templates  -> accepted (P2); each copy
+     is small and tested locally; a doc lists which templates carry which
+     helper so a fix can be swept (same sweep rule as the stacks repo).
+  R3 Synthetic data too clean to teach anything  -> realism rules (3.5) +
+     defect injection; each template has >= 3 adversarial checks.
+  R4 Heavy deps on Windows (lifelines, duckdb)  -> pinned wheels available
+     on Windows for py3.11; tests skip with a clear message if missing.
+  R5 Methods presented as regulatory-grade  -> every README has "What this
+     is not" (not a certified HEDIS engine, not CMS RAF software, not an
+     actuarial opinion).
+  R6 Scope size (16 templates)  -> phases are independently useful; D2
+     allows a 10-template core first.
+
+================================================================================
+9. OPEN DECISIONS (need your call before coding)
+================================================================================
+  D1 Stub style
+     [rec] Hybrid — core runs, extensions are TODO + xfail tests
+           Skeleton — every function raises NotImplementedError
+           Reference — everything implemented; exercises are separate files
+  D2 Template count
+     [rec] All 16, phased
+           Core 10 first (T00–T07, T10, T13); T08/T09/T11/T12/T14/T15 later
+  D3 Languages
+     [rec] Python + SQL twin (DuckDB)
+           Python only
+           Python + SQL + R equivalents for the stats templates
+  D4 Delivery path — (a) link computer [rec] / (b) zip per phase
+  D5 Environments
+     [rec] One shared .venv for development + per-template requirements.txt
+           Per-template venvs (orchestrator --use-template-venv)
+================================================================================
+END OF DRAFT
+================================================================================

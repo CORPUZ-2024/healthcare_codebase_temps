@@ -1,0 +1,9 @@
+id: t03
+title: Predictive risk stratification
+type: B
+intents: [PREDICT, DESCRIBE]
+volume: S
+stacks: [GLM, ML]
+settings: [PAYER, VBC, HOME]
+workflows: [B4, B5]
+jd: [patient stratification, hospitalization risk, acuity tiers, predictive modeling]
