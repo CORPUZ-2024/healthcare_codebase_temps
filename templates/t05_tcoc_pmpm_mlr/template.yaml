@@ -1,0 +1,9 @@
+id: t05
+title: Total cost of care, PMPM and MLR
+type: D
+intents: [MEASURE, VALUE, DESCRIBE]
+volume: M
+stacks: [AGG]
+settings: [PAYER, VBC, HOME]
+workflows: [B2, D1, D2, D6]
+jd: [total cost of care, medical loss ratio impact, cost drivers]

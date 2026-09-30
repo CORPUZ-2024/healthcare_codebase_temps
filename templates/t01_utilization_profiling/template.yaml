@@ -1,0 +1,9 @@
+id: t01
+title: Utilization profiling
+type: B
+intents: [DESCRIBE, MONITOR, MEASURE]
+volume: M
+stacks: [AGG, INF]
+settings: [PAYER, VBC, HOME, HOSP, GOV]
+workflows: [B1, C4]
+jd: [utilization patterns, readmission, payor claims analysis]

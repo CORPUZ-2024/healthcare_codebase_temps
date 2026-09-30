@@ -1,0 +1,9 @@
+id: t00
+title: Claims foundation
+type: A
+intents: [STANDARDIZE]
+volume: M
+stacks: [AGG, RUL]
+settings: [PAYER, VBC, HOME, HOSP, PAC, RX, GOV]
+workflows: [A1, A2]
+jd: [claims data structures, ICD-10 / CPT / NDC, advanced SQL]
