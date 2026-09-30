@@ -6,9 +6,10 @@ and evidence generation, and cross-functional measurement. Each template runs on
 data out of the box, documents a public test dataset, and implements a **standard** method plus an
 **alternative** with the trade-off that makes you switch.
 
-> Build status: [`docs/build/BUILD_STATUS.md`](docs/build/BUILD_STATUS.md). Continuing work: [`docs/build/HANDOFF.md`](docs/build/HANDOFF.md).
-> Build notes (every template, bugs found, decisions): [`docs/build/BUILD_NOTES.md`](docs/build/BUILD_NOTES.md).
-> Scope: [`IMPLEMENTATION_PLAN.txt`](IMPLEMENTATION_PLAN.txt).
+> **v1.0:** 16 templates + a 31-entry glossary; 371 tests green (latest run: [`orchestrator/run_status/LATEST.md`](orchestrator/run_status/LATEST.md)).
+> Find a workflow: [`WORKFLOW_CATALOG.md`](WORKFLOW_CATALOG.md) (39 workflows → template or glossary entry).
+> Plan (as built): [`IMPLEMENTATION_PLAN.txt`](IMPLEMENTATION_PLAN.txt). Build notes (every template, bugs found, decisions):
+> [`docs/build/BUILD_NOTES.md`](docs/build/BUILD_NOTES.md). Status and handoff: [`docs/build/`](docs/build/).
 
 ## Quick start (Windows / VS Code)
 
@@ -17,6 +18,7 @@ py -3.11 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements-dev.txt
 run_all_tests.bat                      # every template's tests -> orchestrator\run_status\LATEST.md
+python orchestrator\run_all_tests.py --glossary   # ... plus every glossary copy block
 cd templates\t05_tcoc_pmpm_mlr
 python run.py                          # demo -> outputs\
 python run.py --selftest               # checks without pytest
@@ -43,7 +45,7 @@ python run.py --selftest               # checks without pytest
 | t14 | [metric_layer_dbt_style](templates/t14_metric_layer_dbt_style) | Cross-functional | SQL models on DuckDB vs. pandas; t-test vs. CUPED | ✅ |
 | t15 | [ops_lifecycle_prior_auth](templates/t15_ops_lifecycle_prior_auth) | Operations | KM time-to-start vs. cohort tables; PA metrics + Pareto | ✅ |
 
-Niche workflows that are snippets rather than templates: [`glossary/niche_workflows_glossary.html`](glossary/niche_workflows_glossary.html) (mock-up; 2 of 31 entries populated).
+Niche workflows that are snippets rather than templates: [`glossary/niche_workflows_glossary.html`](glossary/niche_workflows_glossary.html): 31 entries, each with a copy-paste block that self-tests (`python -m pytest glossary`, or `python orchestrator/run_all_tests.py --glossary`).
 
 ## Rules that keep it modular
 

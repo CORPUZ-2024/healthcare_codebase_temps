@@ -9,6 +9,7 @@ run_all_tests.py — master test orchestrator for every codebase template.
     python orchestrator/run_all_tests.py --selftest      # use `run.py --selftest` (no pytest needed)
     python orchestrator/run_all_tests.py --jobs 4        # run templates in parallel
     python orchestrator/run_all_tests.py --python .venv\\Scripts\\python.exe
+    python orchestrator/run_all_tests.py --glossary      # ALSO run glossary/test_glossary_blocks.py (opt-in, ~30 s)
 
 Results are written to orchestrator/run_status/ (see report.py for the layout).
 Exit codes: 0 = all templates PASS, 1 = at least one not PASS, 2 = discovery problem.
@@ -26,7 +27,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from discover import apply_filters, discover  # noqa: E402
+from discover import TemplateInfo, apply_filters, discover  # noqa: E402
 from report import console_table, run_meta, write_all  # noqa: E402
 from runner import run_template  # noqa: E402
 
@@ -45,7 +46,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--timeout", type=int, default=300, help="seconds per template")
     p.add_argument("--fail-fast", action="store_true", help="stop after the first non-PASS template (serial only)")
     p.add_argument("-k", dest="keyword", help="pytest -k expression passed to every template")
+    p.add_argument("--glossary", action="store_true",
+                   help="also execute every glossary copy block (glossary/test_glossary_blocks.py); pytest mode only")
     return p
+
+
+def glossary_target(repo_root: Path) -> TemplateInfo | None:
+    """The glossary as one extra run target (id 'glo'), or None if its test file is missing."""
+    g = Path(repo_root) / "glossary"
+    if not (g / "test_glossary_blocks.py").exists():
+        return None
+    return TemplateInfo(tid="glo", name="glo_glossary", path=g.resolve(), meta={}, has_run_py=False)   # report shows name[4:]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -58,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
     if not templates:
         print("[discovery] no templates matched")
         return 2
+
+    if args.glossary and not args.selftest:
+        g = glossary_target(HERE.parent)
+        if g is not None:
+            templates = templates + [g]
 
     if args.list:
         for t in templates:

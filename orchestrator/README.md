@@ -21,6 +21,7 @@ python orchestrator/run_all_tests.py --intent EXPLAIN # by intent
 python orchestrator/run_all_tests.py --selftest       # no pytest? uses run.py --selftest
 python orchestrator/run_all_tests.py --jobs 4         # parallel
 python orchestrator/run_all_tests.py -k known_answer  # pass a -k filter to every suite
+python orchestrator/run_all_tests.py --glossary      # also run every glossary copy block (opt-in, ~30 s)
 ```
 
 Windows shortcut: `run_all_tests.bat` (uses `.venv` if present).

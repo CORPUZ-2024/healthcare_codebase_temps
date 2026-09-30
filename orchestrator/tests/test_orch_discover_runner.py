@@ -100,3 +100,12 @@ def test_cli_exit_codes(fake_root, tmp_path):
     assert run_all_tests.main(["--templates-root", str(fake_root), "--status-root", status, "--only", "t01"]) == 0
     assert run_all_tests.main(["--templates-root", str(fake_root), "--status-root", status]) == 1
     assert run_all_tests.main(["--templates-root", str(tmp_path / "missing"), "--status-root", status]) == 2
+
+
+def test_glossary_target_is_opt_in_and_found(tmp_path):
+    """--glossary adds the glossary folder as one extra target; without its test file there is none."""
+    from run_all_tests import glossary_target
+    repo = Path(__file__).resolve().parents[2]
+    g = glossary_target(repo)
+    assert g is not None and g.tid == "glo" and (g.path / "test_glossary_blocks.py").exists()
+    assert glossary_target(tmp_path) is None

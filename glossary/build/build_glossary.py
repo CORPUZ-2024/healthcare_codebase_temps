@@ -1,7 +1,12 @@
+"""Build glossary/niche_workflows_glossary.html from the entry list (E), full_entries.FULL and the gNN_*.py blocks.
+
+    python glossary/build/build_glossary.py
+"""
 from pathlib import Path
-import html, json
-code_g10 = open(Path(__file__).with_name("g10_pdc.py"), encoding="utf-8").read()
-code_g30 = open(Path(__file__).with_name("g30_suppress.py"), encoding="utf-8").read()
+import html, sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from full_entries import FULL as _FULL  # noqa: E402
 
 FACTORS = {
  "F1": ("Licensed", "Spec or code set needs a license (NCQA, PQA, AMA CPT, commercial groupers). Snippet shows an open approximation."),
@@ -51,39 +56,9 @@ E = [
  ("G31","Clinical NLP with negation (rule-based)","UC7",["F4"],"VBC HOME HOSP","Needs NLP tooling and note text you won't have synthetically.","Care notes become an analysis source."),
 ]
 
-FULL = {
- "G10": dict(
-   io=("<b>In:</b> pharmacy claims (member_id, drug_class, fill_dt, days_supply), paid only.<br>"
-       "<b>Out:</b> one row per member × class with index date, covered days, PDC, adherent flag."),
-   code=code_g10,
-   caveats=[
-    ("Early refills overlap and inflate coverage.","Shift overlapping fills forward (implemented), never sum days supply."),
-    ("Inpatient/SNF days: drugs supplied by the facility aren't in pharmacy claims.","Official specs adjust for stays; TODO: pass a stays table and exclude those days from the window."),
-    ("Measure exclusions (hospice, ESRD, specific diagnoses) change the denominator.","Filter members before calling; keep an exclusion log so rates are auditable."),
-    ("Drug-class membership comes from a licensed NDC list.","Use your own class map in synthetic work; swap in the licensed list for reporting."),
-   ],
-   mistakes=["Starting everyone's window on Jan 1 instead of their index date.",
-             "Leaving reversed claims in the data.",
-             "Letting one class's fill cover another class's gap.",
-             "Reporting members with one fill (they are not in the denominator)."],
-   sources=[("PQA — adherence measures (measure steward)","https://www.pqaalliance.org/adherence-measures"),
-            ("CMS — Part C & D performance data / Star Ratings technical notes","https://www.cms.gov/medicare/health-drug-plans/part-c-d-performance-data")]),
- "G30": dict(
-   io=("<b>In:</b> a crosstab of counts (no totals).<br>"
-       "<b>Out:</b> a string table safe to publish, with totals and masked cells."),
-   code=code_g30,
-   caveats=[
-    ("Greedy complementary suppression can over-suppress small tables.","Collapse categories first (e.g., merge age bands), then suppress."),
-    ("Suppression blocks exact back-solving but can leave narrow feasible ranges.","For publication-grade releases, audit with interval/LP tools (e.g., sdcTable in R, τ-ARGUS)."),
-    ("Rates and percentages leak counts.","Suppress any rate whose numerator or denominator is 1–10."),
-    ("Multiple tables from the same data can be combined to re-identify.","Suppress consistently across all tables in a release; keep a release log."),
-   ],
-   mistakes=["Publishing totals next to a single suppressed cell.",
-             "Checking cell size once, then filtering the table again.",
-             "Hiding zeros (allowed, and hiding them confuses readers).",
-             "Applying suppression to rounded numbers instead of the raw counts."],
-   sources=[("ResDAC — CMS cell size suppression policy","https://resdac.org/articles/cms-cell-size-suppression-policy")]),
-}
+# attach the source of each copy block (single source of truth: the gNN_*.py file that the tests execute)
+FULL = {gid: {**meta, "code": open(Path(__file__).with_name(meta["file"]), encoding="utf-8").read()} for gid, meta in _FULL.items()}
+missing = [e[0] for e in E if e[0] not in FULL]
 
 def chip(f): return f'<span class="chip f" title="{html.escape(FACTORS[f][1])}">{f} · {FACTORS[f][0]}</span>'
 
@@ -128,5 +103,10 @@ tpl = open(Path(__file__).with_name("glossary_template.html"), encoding="utf-8")
 out = (tpl.replace("{{SECTIONS}}", sections).replace("{{TOC}}", toc).replace("{{LEGEND}}", legend)
           .replace("{{UC_OPTS}}", uc_opts).replace("{{F_OPTS}}", f_opts).replace("{{S_OPTS}}", s_opts)
           .replace("{{N}}", str(len(E))).replace("{{NFULL}}", str(len(FULL))))
+if not missing:   # all entries populated: the mock-up banner becomes a plain status line
+    import re
+    out = re.sub(r'<div class="banner">MOCK-UP.*?</div>',
+                 f'<div class="banner">{len(FULL)} of {len(E)} entries populated. Every copy block self-tests with '
+                 f'<code>python file.py</code> and is executed by glossary/test_glossary_blocks.py.</div>', out, flags=re.S)
 open(Path(__file__).resolve().parents[1] / "niche_workflows_glossary.html", "w", encoding="utf-8").write(out)
-print("ok", len(out))
+print("ok", len(out), "| full entries:", len(FULL), "of", len(E), "| missing:", missing or "none")

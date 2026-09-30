@@ -18,9 +18,14 @@ template), `IMPLEMENTATION_PLAN.txt` (scope) and `docs/CONVENTIONS.md` (rules). 
 ## Where things stand
 
 * **Done and green (337 tests, 16 templates):** P0–P5 — every template t00–t15.
-* **Next:** P6 glossary (31 entries), then P7 finish. Build notes for t00–t15: `BUILD_NOTES.md` (this folder).
-* The glossary is still the **mock-up** (2 of 31 entries). Its build script is `glossary/build/build_glossary.py`
-  (entries list + FULL dict; each copy block is a standalone `.py` in `glossary/build/`).
+* **Glossary (P6) done:** 31 of 31 entries; blocks run by `glossary/test_glossary_blocks.py` (34 tests), opt-in via
+  `run_all_tests.py --glossary`.
+* **P7 done:** final `IMPLEMENTATION_PLAN.txt` (as built, Section A), `WORKFLOW_CATALOG.md` (39 workflows),
+  root README, full Windows run (17 targets, 371 tests). Remaining: the `v1.0` git tag (awaiting approval).
+* **Next (optional):** the follow-ups in `BUILD_NOTES.md` Section D. Build notes for t00–t15 and the glossary:
+  `BUILD_NOTES.md` (this folder).
+* Glossary build: `glossary/build/build_glossary.py` (entry list `E`) + `full_entries.py` (per-entry metadata and
+  the block file name); each copy block is a standalone `gNN_*.py` in `glossary/build/`. Rebuild after any edit.
 
 ## Setup (Windows, VS Code)
 

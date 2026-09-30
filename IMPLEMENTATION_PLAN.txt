@@ -1,16 +1,18 @@
 ================================================================================
-HEALTHCARE CODEBASE TEMPLATES — IMPLEMENTATION PLAN  (DRAFT v0.1 — FOR REVIEW)
+HEALTHCARE CODEBASE TEMPLATES — IMPLEMENTATION PLAN  (FINAL v1.0 — AS BUILT, 2026-09-29)
 Repo target : github.com/CORPUZ-2024/healthcare_codebase_temps
 Local target: C:\Users\16502\Documents\GitHub\healthcare_codebase_temps
 Source stack: github.com/CORPUZ-2024/healthcare_topics_analytical_stacks
               (data/analytical_tasks.json — 14 analysis task types)
               + project docs ANALYSIS_TASK_MAP.txt, TEST_DATA.txt
 Anchor JD   : Staff Healthcare Analyst (home-based, family-led care start-up)
-Status      : SCOPE + MOCK-UP ONLY. No template code is written until the
-              open decisions in Section 9 are confirmed.
+Status      : BUILT. 16 templates + 31-entry glossary; 371 tests green (Windows,
+              Python 3.11). Section A summarizes what changed from the draft;
+              the rest of the plan is kept for its catalog and rationale.
 ================================================================================
 
 CONTENTS
+  A. AS-BUILT SUMMARY (read first: layout, resolved decisions, status)
   0. Goal, design principles, what "done" means
   1. TASK 1 — Workflow catalog (grouped by type, intent, volume, stack)
        1.1 Controlled vocabularies (settings, intents, volume tiers, stacks)
@@ -28,6 +30,47 @@ CONTENTS
   7. TASK 4 — Build & delivery plan (phases, repo + local)
   8. Risks and mitigations
   9. Open decisions (need your call before coding)
+
+================================================================================
+A. AS-BUILT SUMMARY (v1.0)
+================================================================================
+RESOLVED DECISIONS (Section 9 records the options that were offered)
+  D1 Stub style    -> FULL IMPLEMENTATION: no stubs, no xfail placeholders.
+                      Every step ships a STANDARD method and an ALTERNATIVE, with
+                      the trade-off in the docstring and README "Method choices".
+  D2 Count         -> all 16 templates, built in phases P0-P5; glossary P6.
+  D3 Languages     -> Python + a DuckDB SQL twin where it teaches something
+                      (t00, t01, t04, t05, t06, t08, t14).
+  D4 Delivery      -> built in a cloud session, then locally in
+                      C:\Users\16502\Documents\GitHub\healthcare_codebase_temps;
+                      pushed to github.com/CORPUZ-2024/healthcare_codebase_temps.
+  D5 Environments  -> one shared .venv (requirements-dev.txt) + per-template
+                      requirements.txt.
+
+SIMPLIFIED TEMPLATE LAYOUT (replaces the draft's pipeline/ sub-modules)
+  tNN_<name>/
+    README.md  template.yaml  requirements.txt  pytest.ini  run.py
+    <name>/  config.py  data.py  methods.py  checks.py   (+ optional prep.py,
+             sqltwin.py, dbt_lite.py - helpers are COPIED, never imported)
+    sql/  tests/ (conftest.py + test_tNN_*.py)  data/README.md  outputs/
+  run.py:  python run.py (demo -> outputs/)   python run.py --selftest
+  Rules: docs/CONVENTIONS.md; build rules and lessons: docs/build/BUILD_NOTES.md.
+
+WHAT CHANGED FROM THE DRAFT, AND WHY
+  - pipeline/{synth,load,transform,analyze,report}.py collapsed into data.py +
+    methods.py: fewer files, same content; methods.py holds STANDARD and
+    ALTERNATIVE side by side so the comparison is in one place.
+  - Test tiers: no "exercises" tier (D1 = full implementation). Instead, every
+    analytical template since t06 generates data with a KNOWN truth and tests
+    whether each method recovers it (this caught real defects; see BUILD_NOTES).
+  - Glossary blocks live in glossary/build/gNN_*.py and are executed by
+    glossary/test_glossary_blocks.py (orchestrator: --glossary, opt-in).
+  - Build docs moved to docs/build/ (HANDOFF.md, BUILD_STATUS.md, BUILD_NOTES.md).
+
+STATUS AT v1.0
+  16 templates, 337 template tests + 82 run.py self-tests; glossary 31/31 blocks
+  (34 tests); orchestrator 13 self-tests. Full run: 17 targets, 371 tests green.
+  Browsable catalog: WORKFLOW_CATALOG.md (generated from Section 1).
 
 ================================================================================
 0. GOAL, DESIGN PRINCIPLES, WHAT "DONE" MEANS
@@ -360,48 +403,28 @@ lesson can be told in the JD's business context.
 3. TASK 2 — STANDARD TEMPLATE ANATOMY
 ================================================================================
 
-3.1 FILE TREE (identical skeleton in all 16; example = T05)
+3.1 FILE TREE (as built; example = T05)
 --------------------------------------------------------------------------------
 t05_tcoc_pmpm_mlr/
-├── README.md               What / why / when; inputs & outputs; run steps;
-│                           "Explain it to Finance" paragraph; caveats;
-│                           exercises (L1/L2/L3); scaling-up notes
-├── template.yaml           Metadata ONLY (id, type, intents, volume,
-│                           stacks, settings, jd_bullets). Read as text
-│                           by the orchestrator; nothing imports it.
-├── requirements.txt        Exact extra deps for this template only
-├── run.py                  Entry point:
-│                             python run.py              -> full demo run
-│                             python run.py --selftest   -> no-pytest checks
-│                             python run.py --data puf --path <file>
-├── pipeline/
-│   ├── __init__.py
-│   ├── config.py           @dataclass Config: every tunable parameter with
-│   │                       a comment (e.g., truncation_pct=0.99)
-│   ├── synth.py            Seeded synthetic generator(s) with defect
-│   │                       injection: gen_claims(n, seed, defects=[...])
-│   ├── load.py             Read CSV/Parquet/PUF; column rename map;
-│   │                       schema assertion
-│   ├── checks.py           Data-quality + assumption checks returning a
-│   │                       Findings list (id, severity, message, fix)
-│   ├── transform.py        Cohort / grain transforms (e.g., member-month)
-│   ├── analyze.py          The method (e.g., compute_pmpm, compute_mlr)
-│   └── report.py           Tables -> CSV, charts -> PNG, summary.md
-├── sql/
-│   ├── 01_stg_claims.sql   SQL twin of transform.py (DuckDB dialect,
-│   ├── 02_member_months.sql notes for Snowflake/BigQuery differences)
-│   └── 03_pmpm.sql
-├── tests/
-│   ├── conftest.py         Adds template root to sys.path; tiny seeded
-│   │                       fixtures (n<=500, runs < 3 s)
-│   ├── test_contract.py    Shapes, columns, dtypes, no-NaN rules
-│   ├── test_known_answer.py Hand-computed cases (15/31 = 0.484 MM)
-│   ├── test_checks.py      Each defect injected -> expected finding fires
-│   ├── test_sql_twin.py    pandas result == DuckDB SQL result
-│   └── test_exercises.py   xfail placeholders for L1/L2/L3 TODOs
-├── data/                   gitignored (PUF downloads go here)
-│   └── README.md           where to download, expected columns
-└── outputs/                gitignored (run.py writes here)
+├── README.md               what / why / when, quick start, workflow, "Method
+│                           choices" (standard vs alternative), test data,
+│                           tests table, caveats, "Explain it to Finance"
+├── template.yaml           metadata only (flat keys) - read as text by the
+│                           orchestrator; nothing imports it
+├── requirements.txt        this template's own dependencies
+├── pytest.ini              testpaths = tests <package>, --doctest-modules
+├── run.py                  python run.py (demo) / python run.py --selftest
+├── tcoc_pmpm_mlr/
+│   ├── config.py           @dataclass Config: every tunable parameter
+│   ├── data.py             seeded synthetic generator + public-file loaders
+│   ├── prep.py             COPIED from t00 (claim versions, member-months)
+│   ├── methods.py          STANDARD + ALTERNATIVE methods, NumPy docstrings
+│   ├── checks.py           Finding(check_id, severity, message, fix, n_rows)
+│   └── sqltwin.py          runs sql/*.sql on DuckDB against DataFrames
+├── sql/                    01_pmpm_by_group.sql, 02_pmpm_wrong_join.sql
+├── tests/                  conftest.py, test_t05_methods.py, test_t05_checks_sql.py
+├── data/README.md          public test data: URL, license, column mapping
+└── outputs/                written by run.py (gitignored)
 
 3.2 DOCSTRING STANDARD (NumPy style + 4 beginner sections)
 --------------------------------------------------------------------------------
@@ -413,7 +436,7 @@ t05_tcoc_pmpm_mlr/
   Common mistakes -> 2-4 bullets
   TODO[L1|L2|L3] -> graded extension exercises
 
-3.3 STUB POLICY (recommended "hybrid" — see Decision D1)
+3.3 STUB POLICY (DRAFT PROPOSAL - superseded: D1 resolved as FULL IMPLEMENTATION, see Section A)
 --------------------------------------------------------------------------------
   - CORE functions ship a minimal, correct baseline so run.py and contract
     + known-answer tests PASS on first clone.
@@ -448,7 +471,7 @@ t05_tcoc_pmpm_mlr/
     (HCC coefficients, NCQA value sets) ships as a labeled FAKE toy table;
     README shows where to get the real one.
 
-3.6 MOCK-UP OF ONE REAL FILE  (t05 .../pipeline/analyze.py, excerpt)
+3.6 MOCK-UP OF ONE REAL FILE  (draft-era illustration; the real code is templates/t05_tcoc_pmpm_mlr/tcoc_pmpm_mlr/methods.py)
 --------------------------------------------------------------------------------
 def compute_member_months(enrollment: pd.DataFrame,
                           period_start: str,
@@ -555,7 +578,7 @@ SAMPLE CONSOLE OUTPUT (mock)
   Report: orchestrator/reports/2026-10-01T09-14/summary.html
 
 ================================================================================
-5. FULL REPOSITORY TREE (mock-up)
+5. FULL REPOSITORY TREE (draft mock-up; as-built layout in Section A and README.md)
 ================================================================================
 healthcare_codebase_temps/
 ├── README.md                     Quick start (Windows + macOS), map of
@@ -599,27 +622,26 @@ healthcare_codebase_temps/
 (also: templates/_skeleton/ — an empty-but-runnable template to copy;
  discovery ignores folders starting with "_")
 
-PER-TEMPLATE SPECIFICS (beyond the standard skeleton)
-  t00  pipeline/codesets.py (format regex for ICD-10-CM, CPT/HCPCS,
-       NDC 10->11 normalization, POS, TOB), sql/ 4 models
-  t02  reference/FAKE_hcc_coefficients.csv, FAKE_dx_to_hcc.csv,
-       hierarchies.csv; pipeline/blend.py (V24/V28 weights by year)
-  t03  pipeline/features.py, label.py, model.py, evaluate.py
-       (calibration plot, PPV@top-5%), stratify.py (tiers + k-means)
-  t04  measures/*.yaml (one YAML per measure: denominator, numerator,
-       exclusions, lookback), pipeline/measure_engine.py
-  t05  pipeline/episode.py (optional module)
-  t07  contracts/*.yaml (MSSP-like, Medicaid MCO sub-cap, CM-fee+upside);
-       pipeline/scenarios.py (grid over trend x savings x quality)
-  t08  pipeline/triangle.py, completion.py, forecast.py
-  t09  pipeline/sap_template.md.j2 (statistical analysis plan generator)
-  t10  pipeline/did.py, psm.py, its.py, diagnostics.py
-  t12  instruments/*.yaml (item lists, reverse-scored items, scoring
-       rules; public-domain or FAKE instruments only), pipeline/mmrm.py
-  t14  models/staging|intermediate|marts/*.sql, metrics.yaml,
-       pipeline/dbt_lite.py (runs SQL in order, runs not_null/unique/
-       accepted_values tests), pipeline/experiment_readout.py
-  t15  pipeline/funnel.py, pa_turnaround.py, denials.py
+PER-TEMPLATE SPECIFICS (as built, beyond the standard skeleton)
+  t00  sql/01_claims_latest_version.sql, 02_member_months.sql, 03_service_category.sql;
+       code-format checks (ICD-10-CM, HCPCS, NDC, NPI Luhn)
+  t01  sql/01_ed_per_1000_by_month.sql, 02_readmissions.sql
+  t02  reference/FAKE_hcc_coefficients.csv, FAKE_dx_to_hcc.csv, FAKE_hierarchies.csv,
+       FAKE_demographic_factors.csv
+  t04  measures/FAKE_*.yaml (measure specs), reference/FAKE_value_sets.csv,
+       sql/01_continuous_enrollment.sql, 02_measure_rate.sql
+  t05  prep.py (copied from t00), sql/ twin incl. a wrong-join anti-pattern
+  t06  sql/01_member_period_pmpm.sql, 02_did_cells.sql
+  t07  contracts/FAKE_*.yaml (MSSP BASIC-A / ENHANCED-shaped, Medicaid sub-cap,
+       CM fee + upside)
+  t08  sql/01_lag_triangle.sql, 02_paid_vs_incurred_pmpm.sql
+  t09  sap/sap_template.md (string.Template; renders outputs/SAP_draft.md)
+  t12  instruments/PHQ9.yaml, FAKE_CAREGIVER_BURDEN.yaml
+  t13  funnel_plot.png written by run.py (matplotlib)
+  t14  models/staging|intermediate|marts/*.sql, models/schema.yml, metrics.yaml,
+       metric_layer_dbt_style/dbt_lite.py
+  glossary  build/build_glossary.py, build/full_entries.py, build/gNN_*.py,
+            test_glossary_blocks.py
 
 ================================================================================
 6. TASK 5 — NICHE-WORKFLOW HTML GLOSSARY (scope)
@@ -710,7 +732,7 @@ PHASES (each ends with the orchestrator green before the next starts)
   Scale estimate: ~180–220 files; ~9–12K lines incl. docstrings/tests.
   Each phase is a separate commit (or PR) so you can review in chunks.
 
-DELIVERY — current blockers found during scoping
+DELIVERY — blockers found during scoping (RESOLVED: built locally and pushed; see Section A)
   - github.com/CORPUZ-2024/healthcare_codebase_temps is not reachable from
     this session (private, empty, or not yet created; no GitHub credentials
     here).
@@ -749,7 +771,7 @@ VS CODE SETUP (documented in README)
      allows a 10-template core first.
 
 ================================================================================
-9. OPEN DECISIONS (need your call before coding)
+9. DECISIONS (options as offered in the draft; outcomes in Section A)
 ================================================================================
   D1 Stub style
      [rec] Hybrid — core runs, extensions are TODO + xfail tests
@@ -767,5 +789,5 @@ VS CODE SETUP (documented in README)
      [rec] One shared .venv for development + per-template requirements.txt
            Per-template venvs (orchestrator --use-template-venv)
 ================================================================================
-END OF DRAFT
+END OF PLAN (v1.0)
 ================================================================================

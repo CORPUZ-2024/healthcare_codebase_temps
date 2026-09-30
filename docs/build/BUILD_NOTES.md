@@ -1,13 +1,14 @@
-# BUILD NOTES — t00 to t15 (one complete list)
+# BUILD NOTES — t00 to t15 and the glossary (one complete list)
 
 Everything learned while building the templates, in one place. It covers decisions, the bugs that
 building and testing exposed and how they were fixed, the headline results that each template's
 tests lock in, known limitations, and open follow-ups.
 Companion files: [`BUILD_STATUS.md`](BUILD_STATUS.md) (phase table), [`HANDOFF.md`](HANDOFF.md)
-(how to continue; P6–P7), [`../CONVENTIONS.md`](../CONVENTIONS.md) (rules).
+(how to continue; P7), [`../CONVENTIONS.md`](../CONVENTIONS.md) (rules).
 
 **Status at time of writing (2026-09-29):** all 16 templates, **337 tests green** under the orchestrator
-(82 `run.py --selftest` checks, plus 12 orchestrator self-tests), on Windows / Python 3.11.9 in `.venv`.
+(82 `run.py --selftest` checks, 13 orchestrator self-tests), and the glossary's **31 of 31 blocks** (34 tests), on
+Windows / Python 3.11.9 in `.venv`.
 
 **Provenance.** t00, t01, t02, t03 and t05 were built in an earlier cloud session. Their notes below
 come from their READMEs, tests and git history (`6c6cdb8` P0, `7c4ad40` P1, `4bf7fb1`, `9d371ad` P2
@@ -54,7 +55,7 @@ built in the local session; their notes include the defects found during the bui
 | R7 | Loose build docs at the repo root | `HANDOFF.md` and `BUILD_STATUS.md` moved to `docs/build/` (with this file). Links updated in `README.md` and inside both files. |
 | R8 | scikit-learn 1.8 deprecates `LogisticRegression(penalty=None)` (FutureWarning in t10) | Use `C=1e12` (effectively unpenalized, works on all versions). |
 | R9 | patsy formulas read names from the caller's namespace: a local variable named `C` broke `C(...)` in a probe script | Never name variables `C`, `I` or `Q` in code that builds statsmodels formulas. |
-| R10 | Long bash heredocs with quotes failed to parse three times in the build tool (t04, t11, these notes): nothing was written | Write multi-line files with an editor / file tool (or a script file), not heredocs. |
+| R10 | Long bash heredocs with quotes, and scripted replacements containing backslashes, failed several times in the build tool (t04, t11, these notes, the orchestrator and README edits): nothing was written | Write multi-line files with an editor / file tool (or a script file); make exact edits with an editor, not escaped strings. |
 
 ### A4. Lessons that repeated across templates
 * **Put the truth in the generator.** Every analytical template since t06 generates a known effect,
@@ -337,6 +338,29 @@ built in the local session; their notes include the defects found during the bui
 
 ---
 
+### Glossary (P6) · 31 entries · 34 tests
+* **What was built:** 29 new copy blocks (`glossary/build/g01…g31`, plus the existing G10 PDC and G30 suppression), each a
+  standalone file with a documented function and a `__main__` self-test; `full_entries.py` holds the per-entry metadata
+  (in/out, caveats + solutions, mistakes, sources) that `build_glossary.py` renders; the MOCK-UP banner is removed
+  automatically when every entry is full. `glossary/test_glossary_blocks.py` runs each block as `python file.py` in a clean
+  folder and checks entry/metadata/file consistency; `run_all_tests.py --glossary` adds it as target `glo` (opt-in).
+* **Bugs / corrections during the build:**
+  1. **G11 fentanyl MME was wrong**: the per-fill formula (strength × quantity / days × factor) gave 20 MME/day for a 25 mcg/hr
+     patch; the correct value is 25 × 2.4 = 60 (a patch delivers its hourly dose continuously). The self-test had asserted
+     the wrong number under a label claiming 60. Fixed and tested.
+  2. **G15 IV:** the check "naive and correct SEs differ" was not a sound test (they happened to be close). Replaced with an
+     empirical check: the reported SE matches the sampling SD of the estimate across 200 simulated samples (within 6%).
+  3. **G21 bootstrap:** "BCa is visibly asymmetric" was false for a difference of means between equal groups (skewness
+     cancels). Claim narrowed: the bootstrap matters for small/unbalanced groups and non-mean statistics; the test now checks
+     that t, percentile and BCa agree in the equal-group case.
+  4. **G31 NegEx:** the word-boundary check was trivially true (no note contained "fallopian"); a note was added so it tests something.
+  5. **G05 Charlson:** a self-test label claimed more than it checked; relabelled.
+  6. A scripted edit of the orchestrator failed on escaped backslashes (R10-style); done with precise edits instead.
+* **Verify before relying on:** code lists in G05 (Quan 2005), G07 (abbreviated PQI list), CDC 2022 MME factors in G11,
+  dual status codes in G27, NYU ED lookup source in G06. Each block says so in its header.
+
+---
+
 ## C. Check-ID registry (t00–t15)
 
 | Family | IDs → template |
@@ -357,7 +381,8 @@ built in the local session; their notes include the defects found during the bui
 4. t08: large-claim handling and a non-1.0 tail factor; don't quote ETS intervals without a backtest.
 5. t10: staggered-adoption DiD (Callaway-Sant'Anna / Sun-Abraham) and an E-value sensitivity analysis.
 6. t12: unstructured-covariance MMRM (R `mmrm` / SAS) and a tipping-point analysis for real studies.
-7. **Uncommitted:** t10–t15 and the doc updates since commit `adbfa56`. `run_all_tests.sh` mode change: see R5.
-8. `project_specs/` (outside the repo) holds byte-identical copies of `IMPLEMENTATION_PLAN.txt` and
-   `glossary/niche_workflows_glossary.html`. Keep them as the original drafts, or delete them. That's your call.
-9. Next build: **P6 glossary** (31 entries; 2 populated) and **P7** (final plan, `WORKFLOW_CATALOG.md`, `v1.0` tag). See `HANDOFF.md`.
+7. **Uncommitted:** the glossary (P6), P7 (final plan, `WORKFLOW_CATALOG.md`, README) and doc updates since commit `8060283`. `run_all_tests.sh` mode change: see R5.
+7a. CI runs templates only; add `--glossary` to the CI step if the glossary blocks should gate merges (~30 s per OS).
+8. `project_specs/` (outside the repo) holds the ORIGINAL drafts of `IMPLEMENTATION_PLAN.txt` (v0.1) and the glossary
+   mock-up; the repo versions are now final and differ. Keep them as history or delete them. That's your call.
+9. **P7 done** (final plan with an as-built Section A, `WORKFLOW_CATALOG.md` generated from plan Section 1 (39 workflows, links checked), README, full Windows run: 17 targets, 371 tests). Only the `v1.0` tag remains, pending approval.
