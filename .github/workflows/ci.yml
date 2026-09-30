@@ -1,0 +1,25 @@
+name: templates-ci
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - name: Orchestrator's own tests (discovery, runner, independence contract)
+        run: python -m pytest orchestrator -q
+      - name: All templates
+        run: python orchestrator/run_all_tests.py --jobs 2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run-status-${{ matrix.os }}
+          path: orchestrator/run_status/

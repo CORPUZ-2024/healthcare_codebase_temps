@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run this template (run.py in the open file's template folder)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${fileDirname}/../run.py",
+      "cwd": "${fileDirname}/..",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Self-test this template",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${fileDirname}/../run.py",
+      "args": ["--selftest"],
+      "cwd": "${fileDirname}/..",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Orchestrator: run all tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/orchestrator/run_all_tests.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ]
+}
