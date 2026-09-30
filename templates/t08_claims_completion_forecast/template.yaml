@@ -1,0 +1,9 @@
+id: t08
+title: Claims completion (IBNR) and PMPM forecast
+type: E
+intents: [MEASURE, MONITOR, PREDICT]
+volume: M
+stacks: [ACT, GLM]
+settings: [PAYER, VBC]
+workflows: [E1, E2]
+jd: [claims completion and IBNR, cost trend forecasting, actuarial collaboration]

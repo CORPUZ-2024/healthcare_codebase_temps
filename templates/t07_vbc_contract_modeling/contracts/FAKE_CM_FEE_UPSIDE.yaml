@@ -1,0 +1,14 @@
+# FAKE care-management vendor contract: PMPM fee + upside share of savings, quality gate,
+# part of the fee at risk. Typical of caregiver-support / care-management programs.
+contract_id: FAKE_CM_FEE_UPSIDE
+type: fee_upside
+fake: true
+title: Care-management fee + shared-savings upside (FAKE)
+fee_pmpm: 150.0
+target_trend_pct: 0.05        # target PMPM = baseline PMPM x (1 + trend)
+msr_pct: 0.02
+share_from_first_dollar: false  # vendor shares only savings ABOVE the 2% threshold
+upside_share: 0.50
+upside_cap_pct_of_fees: 1.00  # upside capped at 100% of fees paid
+quality_measures_required: 2  # of the measures in the quality dict, at least this many must be met
+fees_at_risk_pct: 0.10        # refunded if the quality gate is missed

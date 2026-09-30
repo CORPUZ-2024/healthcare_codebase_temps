@@ -1,0 +1,19 @@
+# FAKE contract shaped like the Medicare Shared Savings Program ENHANCED track (two-sided).
+# Parameters are illustrative; real rules: 42 CFR 425 and the MSSP Shared Savings and Losses
+# Assignment Methodology Specifications (cms.gov/medicare/payment/fee-for-service-providers/shared-savings-program-ssp-acos).
+contract_id: FAKE_MSSP_ENHANCED
+type: shared_savings
+fake: true
+title: ACO two-sided shared savings / losses (MSSP ENHANCED-shaped, FAKE)
+msr_pct: 0.02                 # minimum savings rate: savings must be >= 2% of benchmark to share
+mlr_pct: 0.02                 # minimum loss rate: losses must be >= 2% of benchmark to owe
+share_from_first_dollar: true # once MSR is met, share ALL savings (MSSP) vs only savings above MSR
+max_sharing_rate: 0.75
+quality_scales_sharing: true  # final sharing rate = max_sharing_rate x quality score
+quality_gate: 0.40            # below this quality score: no shared savings at all
+savings_cap_pct: 0.20         # payment capped at 20% of the benchmark
+two_sided: true
+loss_rate_min: 0.40           # shared loss rate = 1 - final sharing rate, bounded to [0.40, 0.75]
+loss_rate_max: 0.75
+loss_cap_pct: 0.15            # repayment capped at 15% of the benchmark
+truncation_amt: 150000        # per-beneficiary annual expenditure cap before comparison

@@ -1,0 +1,9 @@
+id: t06
+title: ROI and cost offset
+type: D
+intents: [VALUE, EXPLAIN]
+volume: S
+stacks: [AGG, GLM, CAU]
+settings: [PAYER, VBC, HOME]
+workflows: [D3]
+jd: [cost offset, return on investment, program evaluation for payers]

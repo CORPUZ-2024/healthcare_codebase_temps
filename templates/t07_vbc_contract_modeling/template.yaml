@@ -1,0 +1,9 @@
+id: t07
+title: VBC contract modeling
+type: D
+intents: [VALUE, MEASURE]
+volume: XS
+stacks: [RUL, AGG]
+settings: [PAYER, VBC, HOME]
+workflows: [D4, D5]
+jd: [value-based contract modeling, shared savings and risk arrangements, payer negotiations]

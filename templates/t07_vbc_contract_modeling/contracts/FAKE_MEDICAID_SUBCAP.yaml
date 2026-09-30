@@ -1,0 +1,13 @@
+# FAKE Medicaid managed-care sub-capitation: the plan pays a home & community-based services
+# (HCBS) agency a fixed PMPM for a service bundle; the agency bears the cost risk inside corridors.
+contract_id: FAKE_MEDICAID_SUBCAP
+type: subcap
+fake: true
+title: Medicaid HCBS sub-capitation with risk corridors and stop-loss (FAKE)
+cap_pmpm: 410.0
+corridors:                    # share of margin (gain OR loss) the PROVIDER keeps, by |margin %| band
+  - {lo: 0.00, hi: 0.03, provider_share: 1.00}
+  - {lo: 0.03, hi: 0.10, provider_share: 0.50}
+  - {lo: 0.10, hi: 9.99, provider_share: 0.00}
+stoploss_attachment_amt: 40000   # per member per year, provider cost above this ...
+stoploss_coinsurance: 0.80       # ... is 80% reimbursed by the plan

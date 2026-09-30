@@ -1,0 +1,9 @@
+id: t09
+title: Study design, power and SAP
+type: F
+intents: [DESIGN]
+volume: XS
+stacks: [INF]
+settings: [PAYER, VBC, HOME, HOSP]
+workflows: [F1]
+jd: [study design and power analysis, randomization, statistical analysis plans]

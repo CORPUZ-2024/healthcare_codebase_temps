@@ -6,7 +6,8 @@ and evidence generation, and cross-functional measurement. Each template runs on
 data out of the box, documents a public test dataset, and implements a **standard** method plus an
 **alternative** with the trade-off that makes you switch.
 
-> Build status: see [`BUILD_STATUS.md`](BUILD_STATUS.md). Continuing work: [`HANDOFF.md`](HANDOFF.md).
+> Build status: [`docs/build/BUILD_STATUS.md`](docs/build/BUILD_STATUS.md). Continuing work: [`docs/build/HANDOFF.md`](docs/build/HANDOFF.md).
+> Build notes (every template, bugs found, decisions): [`docs/build/BUILD_NOTES.md`](docs/build/BUILD_NOTES.md).
 > Scope: [`IMPLEMENTATION_PLAN.txt`](IMPLEMENTATION_PLAN.txt).
 
 ## Quick start (Windows / VS Code)
@@ -31,10 +32,10 @@ python run.py --selftest               # checks without pytest
 | t03 | [predictive_risk_stratification](templates/t03_predictive_risk_stratification) | Risk | logistic vs. gradient boosting; capacity tiers vs. k-means | ✅ |
 | t04 | [quality_measures_care_gaps](templates/t04_quality_measures_care_gaps) | Quality | Wilson vs. Jeffreys; admin vs. hybrid | ✅ |
 | t05 | [tcoc_pmpm_mlr](templates/t05_tcoc_pmpm_mlr) | Health economics | ratio-of-sums vs. mean-of-members PMPM; regulatory vs. simple MLR | ✅ |
-| t06 | roi_cost_offset | Health economics | matched DiD vs. two-part / bootstrap | ⏳ |
-| t07 | vbc_contract_modeling | VBC | deterministic reconciliation vs. Monte Carlo | ⏳ |
-| t08 | claims_completion_forecast | Actuarial | chain-ladder + SARIMAX vs. Bornhuetter-Ferguson + ETS | ⏳ |
-| t09 | study_design_power | Evidence | analytic vs. simulation power | ⏳ |
+| t06 | [roi_cost_offset](templates/t06_roi_cost_offset) | Health economics | matched DiD vs. two-part / bootstrap | ✅ |
+| t07 | [vbc_contract_modeling](templates/t07_vbc_contract_modeling) | VBC | deterministic reconciliation vs. Monte Carlo | ✅ |
+| t08 | [claims_completion_forecast](templates/t08_claims_completion_forecast) | Actuarial | chain-ladder + SARIMAX vs. Bornhuetter-Ferguson + ETS | ✅ |
+| t09 | [study_design_power](templates/t09_study_design_power) | Evidence | analytic vs. simulation power | ✅ |
 | t10 | causal_impact_evaluation | Evidence | DiD / PSM vs. AIPW / ITS | ⏳ |
 | t11 | survival_time_to_event | Evidence | lifelines KM/Cox vs. statsmodels PHReg | ⏳ |
 | t12 | patient_reported_outcomes | Evidence | MMRM vs. ANCOVA / GEE | ⏳ |
