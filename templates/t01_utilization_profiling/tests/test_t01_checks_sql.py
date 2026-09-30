@@ -1,11 +1,10 @@
 import pandas as pd
 import pytest
 
-from conftest import ip_claims
 from utilization_profiling import checks, methods
 
 
-def test_ip_missing_dates_check():
+def test_ip_missing_dates_check(ip_claims):
     c = ip_claims([("a", "M1", "2025-01-01", "2025-01-05")])
     c.loc[0, "discharge_dt"] = pd.NaT
     assert checks.check_ip_missing_dates(c)[0].check_id == "VAL-015"

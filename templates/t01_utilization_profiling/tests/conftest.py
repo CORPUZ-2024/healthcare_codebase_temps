@@ -17,7 +17,13 @@ def prepared():
     return u, claims, mm
 
 
-def ip_claims(rows):
+def _ip_claims(rows):
     d = pd.to_datetime
     return pd.DataFrame([{"claim_id": c, "member_id": m, "service_category": "IP", "admit_dt": d(a),
                           "discharge_dt": d(b), "paid_amt": 1000.0} for c, m, a, b in rows])
+
+
+@pytest.fixture
+def ip_claims():
+    """Factory: ip_claims([(claim_id, member_id, admit, discharge), ...]) -> IP claim rows."""
+    return _ip_claims

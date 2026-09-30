@@ -2,11 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from conftest import ip_claims
 from utilization_profiling import methods
 
 
-def test_build_stays_merges_transfers_only():
+def test_build_stays_merges_transfers_only(ip_claims):
     c = ip_claims([("a", "M1", "2025-01-01", "2025-01-05"), ("b", "M1", "2025-01-06", "2025-01-09"),
                    ("c", "M1", "2025-01-12", "2025-01-14"), ("d", "M2", "2025-01-06", "2025-01-09")])
     s = methods.build_stays(c)
@@ -15,7 +14,7 @@ def test_build_stays_merges_transfers_only():
     assert m1["los_days"].tolist() == [8, 2] and m1["n_claims"].tolist() == [2, 1]
 
 
-def test_readmission_window_boundaries():
+def test_readmission_window_boundaries(ip_claims):
     c = ip_claims([("a", "M1", "2025-01-01", "2025-01-05"), ("b", "M1", "2025-02-04", "2025-02-06"),   # day 30
                    ("c", "M1", "2025-03-10", "2025-03-12")])                                           # day 32
     s = methods.build_stays(c)
@@ -25,7 +24,7 @@ def test_readmission_window_boundaries():
     assert idx["days_to_readmit"].iloc[0] == 30
 
 
-def test_ineligible_when_not_enrolled_through_window():
+def test_ineligible_when_not_enrolled_through_window(ip_claims):
     c = ip_claims([("a", "M1", "2025-01-01", "2025-01-05")])
     idx = methods.readmissions_per_index(methods.build_stays(c), pd.Series({"M1": pd.Timestamp("2025-01-20")}),
                                          data_end=pd.Timestamp("2025-12-31"))

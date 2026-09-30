@@ -10,7 +10,8 @@ import re
 import sys
 from pathlib import Path
 
-from conftest import ORCH, REPO
+ORCH = Path(__file__).resolve().parents[1]
+REPO = ORCH.parent
 
 TEMPLATES = REPO / "templates"
 OWN = {"discover", "runner", "report", "run_all_tests", "conftest"}
