@@ -12,7 +12,10 @@ from __future__ import annotations
 import ast
 import html
 import math
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from xml.sax.saxutils import quoteattr
 
@@ -434,6 +437,46 @@ def main():
         written.append(out)
     for p in written:
         print("wrote", p.relative_to(REPO))
+    export_svgs(written)
+
+
+# ---------------------------------------------------------------- svg export
+# GitHub shows .drawio files as raw XML, so each diagram is also exported to
+# svg/ for the README. Needs draw.io desktop; skipped with a note if missing.
+DRAWIO_EXE = [
+    Path(os.environ.get("LOCALAPPDATA", "")) / "Programs/draw.io/draw.io.exe",
+    Path(os.environ.get("ProgramFiles", "")) / "draw.io/draw.io.exe",
+    Path("/Applications/draw.io.app/Contents/MacOS/draw.io"),
+]
+# draw.io adds a PNG copy of every HTML label as a fallback for viewers without
+# foreignObject support. Browsers (and GitHub) don't need it, and it is ~95% of the file.
+PNG_FALLBACK = re.compile(r'<image [^>]*xlink:href="data:image/png;base64,[^"]*"[^>]*/>')
+
+
+def find_drawio():
+    found = os.environ.get("DRAWIO") or shutil.which("drawio") or shutil.which("draw.io")
+    if found:
+        return found
+    return next((str(p) for p in DRAWIO_EXE if p.is_file()), None)
+
+
+def export_svgs(sources):
+    exe = find_drawio()
+    if not exe:
+        print("draw.io desktop not found (set DRAWIO=<path>); skipped SVG export")
+        return
+    svg_dir = HERE / "svg"
+    svg_dir.mkdir(exist_ok=True)
+    for src in sources:
+        out = svg_dir / f"{src.stem}.svg"
+        subprocess.run([exe, "--export", "--format", "svg", "--theme", "light",
+                        "--embed-svg-fonts", "false", "--output", str(out), str(src)],
+                       check=True, capture_output=True)
+        svg = PNG_FALLBACK.sub("", out.read_text(encoding="utf-8"))
+        # Opaque white page, so black lines and text stay readable in GitHub dark mode.
+        svg = re.sub(r"background(-color)?: transparent", r"background\1: #ffffff", svg, count=2)
+        out.write_text(svg, encoding="utf-8")
+        print("wrote", out.relative_to(REPO))
 
 
 if __name__ == "__main__":
